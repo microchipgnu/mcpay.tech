@@ -98,17 +98,9 @@ export const urlUtils = {
   },
 }
 
-// API Response types
-export interface ApiResponse<T = unknown> {
-  data?: T
-  error?: string
-  details?: unknown
-}
-
-export interface ApiError extends Error {
-  status?: number
-  details?: unknown
-}
+// Types are now centralized in @/types
+// Re-export for backward compatibility
+export type { ApiResponse, ApiError } from '@/types';
 
 // API utility function with proper error handling
 export async function apiCall<T = unknown>(

@@ -85,13 +85,13 @@
     "@types/pg": "^8.15.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/react-syntax-highlighter": "^15.5.13",
     "drizzle-kit": "^0.31.1",
     "eslint": "^9",
     "eslint-config-next": "15.4.1",
     "tailwindcss": "^4",
     "tsx": "^4.19.4",
     "tw-animate-css": "^1.3.5",
-    "typescript": "^5.8.3",
-    "@types/react-syntax-highlighter": "^15.5.13"
+    "typescript": "5.8.3"
   }
 }

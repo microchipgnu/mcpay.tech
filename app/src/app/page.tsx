@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import { useTheme } from "@/components/providers/theme-context"
 import { urlUtils, textUtils } from "@/lib/client/utils"
+import type { MCPServer } from "@/types"
 import {
   AlertCircle,
   ArrowRight,
@@ -61,16 +62,7 @@ interface MCPInputPropertySchema {
   description?: string;
   [key: string]: unknown;
 }
-export interface MCPServer { // Exporting MCPServer as it's used in the props
-  id: string
-  name: string
-  description: string
-  url: string
-  category: string
-  tools: MCPTool[]
-  icon: React.ReactNode
-  verified?: boolean
-}
+// MCPServer type now imported at top of file
 
 // Note: Backend supports multi-wallet and blockchain-agnostic user management
 // Frontend currently displays single wallet but is prepared for multi-wallet features

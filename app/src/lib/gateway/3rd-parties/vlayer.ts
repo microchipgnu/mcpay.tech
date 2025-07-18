@@ -14,50 +14,9 @@
  * 4. Incentivize good server behavior
  */
 
-export interface ToolMetadata {
-  name: string;
-  description: string;
-  parameters: {
-    name: string;
-    type: string;
-    description: string;
-  }[];
-}
+import type { ToolMetadata, ExecutionContext, WebProofRequest, WebProofResponse, VerificationResult } from "@/types";
 
-export interface ExecutionContext {
-  tool: ToolMetadata;
-  params: Record<string, unknown>;
-  result: unknown;
-  timestamp: number;
-  url?: string; // URL of the request if it's a web request
-  method?: 'GET' | 'POST';
-  headers?: string[];
-}
-
-export interface WebProofRequest {
-  url: string;
-  headers: string[];
-  notary: string;
-  method: 'GET' | 'POST';
-  data?: string;
-  max_sent_data?: number;
-  max_recv_data?: number;
-}
-
-export interface WebProofResponse {
-  presentation: string;
-}
-
-export interface VerificationResult {
-  isConsistent: boolean;
-  confidenceScore: number; // 0-1
-  inconsistencies?: {
-    type: 'parameter_mismatch' | 'result_mismatch' | 'description_mismatch';
-    details: string;
-  }[];
-  proof?: {
-    originalExecution: ExecutionContext;
-    replayExecution?: ExecutionContext;
+// VLayer types are now centralized in @/types
     aiEvaluation: string;
     webProof?: WebProofResponse; // Cryptographic proof from vlayer
   };

@@ -50,7 +50,7 @@ export type {
   
   // Price Provider Types
   PriceProvider,
-} from './types';
+} from '@/types';
 
 // =============================================================================
 // AMOUNT UTILITIES EXPORTS
@@ -201,7 +201,7 @@ export {
 // CONSTANTS & ENUMS
 // =============================================================================
 
-export { COMMON_DECIMALS } from './types';
+export { COMMON_DECIMALS } from '@/types';
 
 // =============================================================================
 // CONVENIENCE RE-EXPORTS
@@ -244,8 +244,8 @@ export {
 // =============================================================================
 
 // Import the specific functions we need for utility functions
-import type { Network } from './types';
-import { COMMON_DECIMALS } from './types';
+import type { Network } from '@/types';
+import { COMMON_DECIMALS } from '@/types';
 import { 
   toBaseUnits,
   fromBaseUnits,
@@ -346,7 +346,7 @@ import * as Amounts from './amounts';
 import * as Tokens from './tokens';
 import * as Chains from './chains';
 import * as BalanceTracker from './balance-tracker';
-import * as Types from './types';
+import * as Types from '@/types';
 
 export { Amounts, Tokens, Chains, BalanceTracker, Types };
 

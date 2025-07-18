@@ -57,6 +57,7 @@
 import { CdpClient } from "@coinbase/cdp-sdk";
 import { randomUUID } from "node:crypto";
 import env from "@/lib/gateway/env";
+import type { CDPNetwork, CDPAccountInfo, CreateCDPWalletOptions, CDPWalletResult } from "@/types";
 
 // CDP Client singleton
 let cdpClient: CdpClient | null = null;
@@ -92,49 +93,7 @@ export function getCDPClient(): CdpClient {
     return cdpClient;
 }
 
-// Supported networks for CDP
-export type CDPNetwork = 
-    | "base" 
-    | "base-sepolia" 
-    | "ethereum" 
-    | "ethereum-sepolia"
-    | "polygon"
-    | "arbitrum"
-    | "sei-testnet";
-
-// Supported networks for CDP
-export type CDPNetworkSmartAccount = 
-    | "base" 
-    | "base-sepolia" 
-    | "ethereum" 
-    | "ethereum-sepolia"
-    | "polygon"
-    | "arbitrum"
-
-// CDP Account information
-export interface CDPAccountInfo {
-    accountId: string;
-    walletAddress: string;
-    network: CDPNetwork;
-    isSmartAccount: boolean;
-    smartAccountAddress?: string;
-    ownerAccountId?: string;
-    accountName?: string;
-}
-
-// CDP Wallet creation options
-export interface CreateCDPWalletOptions {
-    accountName?: string;
-    network?: CDPNetwork;
-    createSmartAccount?: boolean;
-    ownerAccountId?: string;
-}
-
-// Result of CDP wallet creation
-export interface CDPWalletResult {
-    account: CDPAccountInfo;
-    smartAccount?: CDPAccountInfo;
-}
+// CDP types are now centralized in @/types
 
 /**
  * Create a new CDP managed account

@@ -26,17 +26,9 @@
 import { sql } from "drizzle-orm";
 import { boolean, check, decimal, index, integer, jsonb, pgTable, pgView, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import type { BlockchainArchitecture } from "@/lib/commons";
+import type { BlockchainArchitecture, RevenueDetail, RevenueDetails } from "@/types";
 
-// Type definitions for database view results
-export type RevenueDetail = {
-  currency: string;
-  network: string;
-  decimals: number;
-  amount_raw: string;
-};
-
-export type RevenueDetails = RevenueDetail[] | null;
+// Revenue types are now centralized in @/types
 
 // Enhanced Users table - supporting both wallet and traditional auth
 export const users = pgTable('users', {

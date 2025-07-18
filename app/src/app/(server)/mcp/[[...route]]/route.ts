@@ -15,7 +15,8 @@ import { txOperations, withTransaction } from "@/lib/gateway/db/actions";
 import { users } from "@/lib/gateway/db/schema";
 import { attemptAutoSign } from "@/lib/gateway/payment-strategies";
 import { createExactPaymentRequirements, decodePayment, settle, verifyPayment, x402Version } from "@/lib/gateway/payments";
-import { settleResponseHeader, type SupportedNetwork } from "@/lib/gateway/types";
+import { settleResponseHeader } from "@/lib/gateway/types";
+import type { SupportedNetwork } from "@/types";
 import { type Context, Hono } from "hono";
 import { handle } from "hono/vercel";
 

@@ -25,7 +25,8 @@ import type { Address } from "viem";
 import type { ERC20TokenAmount, Price, Resource } from "x402/types";
 import { moneySchema } from "x402/types";
 import type { Context } from "hono";
-import { PaymentPayloadSchema, safeBase64Decode, type SupportedNetwork, type PaymentPayload, type SupportedPaymentRequirements, type ExtendedPaymentRequirements } from "@/lib/gateway/types";
+import { safeBase64Decode } from "@/lib/gateway/types";
+import { PaymentPayloadSchema, type SupportedNetwork, type PaymentPayload, type SupportedPaymentRequirements, type ExtendedPaymentRequirements } from "@/types";
 import { createFacilitator } from "@/lib/gateway/types";
 import { getFacilitatorUrl } from "@/lib/gateway/env";
 import { toBaseUnits } from "@/lib/commons";
@@ -142,10 +143,7 @@ export const config: Record<string, ChainConfig> = {
     },
 };
 
-export type ChainConfig = {
-    usdcAddress: Address;
-    usdcName: string;
-};
+// ChainConfig type is now centralized in @/types
 
 // Network-specific facilitator URLs
 const FACILITATOR_URLS: Partial<Record<SupportedNetwork, Resource>> = {

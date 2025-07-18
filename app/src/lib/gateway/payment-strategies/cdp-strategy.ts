@@ -17,8 +17,9 @@ import { baseSepolia, seiTestnet } from "viem/chains";
 import { txOperations, withTransaction } from "@/lib/gateway/db/actions";
 import { getCDPAccount, isSupportedCDPNetwork, type CDPNetwork } from "@/lib/gateway/3rd-parties/cdp";
 import { x402Version } from "@/lib/gateway/payments";
-import { createPaymentHeader, type ExtendedPaymentRequirements } from "@/lib/gateway/types";
-import type { PaymentSigningContext, PaymentSigningResult, PaymentSigningStrategy } from "@/lib/gateway/payment-strategies/index";
+import { createPaymentHeader } from "@/lib/gateway/types";
+import type { ExtendedPaymentRequirements } from "@/types";
+import type { PaymentSigningContext, PaymentSigningResult, PaymentSigningStrategy } from "@/types";
 
 // Interface for CDP wallet metadata structure
 interface CDPWalletMetadata {

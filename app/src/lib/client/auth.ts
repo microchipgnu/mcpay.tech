@@ -17,27 +17,6 @@ export const {
   signOut
 } = authClient
 
-// Auth status type
-export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated'
-
-// Enhanced user type with wallet information
-export interface AuthUser {
-  id: string
-  name?: string
-  email?: string
-  emailVerified?: boolean
-  image?: string
-  displayName?: string
-  walletAddress?: string // Legacy field
-  createdAt: string
-  updatedAt: string
-  wallets?: Array<{
-    id: string
-    walletAddress: string
-    blockchain: string
-    walletType: 'external' | 'managed' | 'custodial'
-    provider?: string
-    isPrimary: boolean
-    isActive: boolean
-  }>
-} 
+// Types are now centralized in @/types
+// Re-export for backward compatibility
+export type { AuthStatus, AuthUser } from '@/types'; 
