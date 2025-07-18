@@ -202,6 +202,26 @@ export interface ToolPaymentInfo {
   token: string;
 }
 
+/** Payment information structure for MCP tool execution */
+export interface MCPToolPaymentInfo {
+  maxAmountRequired: string;
+  network: string;
+  asset: string;
+  payTo?: string;
+  resource: string;
+  description: string;
+  // Optional pricing metadata when using tool_pricing table
+  _pricingInfo?: {
+    humanReadableAmount: string;
+    currency: string;
+    network: string;
+    tokenDecimals: number;
+    assetAddress?: string;
+    priceRaw: string; // Original base units from pricing table
+    pricingId: string; // Pricing ID for usage tracking
+  };
+}
+
 // =============================================================================
 // PAYMENT STRATEGY TYPES
 // =============================================================================

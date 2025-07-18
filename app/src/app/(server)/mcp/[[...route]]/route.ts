@@ -10,7 +10,7 @@
  */
 
 import { fromBaseUnits } from "@/lib/commons";
-import { type AuthType } from "@/lib/gateway/auth";
+import type { AuthType, User, UserWithWallet, MCPToolPaymentInfo, DbToolResult, MCPRouteToolCall } from "@/types";
 import { txOperations, withTransaction } from "@/lib/gateway/db/actions";
 import { users } from "@/lib/gateway/db/schema";
 import { attemptAutoSign } from "@/lib/gateway/payment-strategies";
@@ -26,60 +26,7 @@ const app = new Hono<{ Bindings: AuthType }>({
     strict: false,
 }).basePath("/mcp")
 
-// Use Drizzle-inferred types from schema
-type User = typeof users.$inferSelect;
-
-// Enhanced User type that includes wallet information for API usage
-type UserWithWallet = User & {
-    walletAddress: string; // Primary wallet address for API compatibility
-};
-
-// Define payment information structure based on database schema
-interface PaymentInfo {
-    maxAmountRequired: string;
-    network: string;
-    asset: string;
-    payTo?: string;
-    resource: string;
-    description: string;
-    // Optional pricing metadata when using tool_pricing table
-    _pricingInfo?: {
-        humanReadableAmount: string;
-        currency: string;
-        network: string;
-        tokenDecimals: number;
-        assetAddress?: string;
-        priceRaw: string; // Original base units from pricing table
-        pricingId: string; // Pricing ID for usage tracking
-    };
-}
-
-// Define tool configuration type based on database query results
-interface DbToolResult {
-    id: string;
-    name: string;
-    description: string;
-    inputSchema: unknown;
-    isMonetized: boolean;
-    payment: unknown;
-    status: string;
-    metadata: unknown;
-    createdAt: Date;
-    updatedAt: Date;
-    serverId: string;
-}
-
-// Define tool call type for better type safety
-type ToolCall = {
-    name: string;
-    args: Record<string, unknown>;
-    isPaid: boolean;
-    payment?: PaymentInfo;
-    id?: string;
-    toolId?: string;
-    serverId?: string;
-    pricingId?: string; // Include pricing ID for usage tracking
-};
+// Types are now centralized in @/types
 
 // Headers that must NOT be forwarded (RFC‑7230 §6.1)
 const HOP_BY_HOP = new Set([
@@ -206,7 +153,7 @@ const mirrorRequest = (res: Response) => {
 /**
  * Helper function to inspect request payload for streamable HTTP requests and identify tool calls
  */
-const inspectRequest = async (c: Context): Promise<{ toolCall?: ToolCall, body?: ArrayBuffer }> => {
+const inspectRequest = async (c: Context): Promise<{ toolCall?: MCPRouteToolCall, body?: ArrayBuffer }> => {
     const rawRequest = c.req.raw;
 
     let toolCall = undefined;
@@ -280,7 +227,7 @@ const inspectRequest = async (c: Context): Promise<{ toolCall?: ToolCall, body?:
                                             );
                                             
                                             // Use the base payment structure from toolConfig.payment and override the amount
-                                            const basePayment = toolConfig.payment as PaymentInfo;
+                                            const basePayment = toolConfig.payment as MCPToolPaymentInfo;
                                             paymentDetails = {
                                                 ...basePayment,
                                                 // Use human-readable amount - createExactPaymentRequirements will convert to base units internally
@@ -321,11 +268,11 @@ const inspectRequest = async (c: Context): Promise<{ toolCall?: ToolCall, body?:
                             name: toolName,
                             args: toolArgs || {},
                             isPaid,
-                            ...(paymentDetails && { payment: paymentDetails as PaymentInfo }),
+                            ...(paymentDetails && { payment: paymentDetails as MCPToolPaymentInfo }),
                             ...(id && { id: id }),
                             ...(toolId && { toolId }),
                             ...(serverId && { serverId }),
-                            ...(paymentDetails && (paymentDetails as PaymentInfo)._pricingInfo?.pricingId && { pricingId: (paymentDetails as PaymentInfo)._pricingInfo!.pricingId })
+                            ...(paymentDetails && (paymentDetails as MCPToolPaymentInfo)._pricingInfo?.pricingId && { pricingId: (paymentDetails as MCPToolPaymentInfo)._pricingInfo!.pricingId })
                         };
 
                         if (jsonData.params._meta) {
@@ -427,7 +374,7 @@ async function captureResponseData(upstream: Response): Promise<Record<string, u
  * Records analytics and tool usage data in the database
  */
 async function recordAnalytics(params: {
-    toolCall: ToolCall;
+    toolCall: MCPRouteToolCall;
     user: UserWithWallet | null;
     startTime: number;
     upstream: Response;
@@ -504,7 +451,7 @@ async function recordAnalytics(params: {
  * Processes payment for paid tool calls
  */
 async function processPayment(params: {
-    toolCall: ToolCall;
+    toolCall: MCPRouteToolCall;
     c: Context;
     user: UserWithWallet | null;
     startTime: number;

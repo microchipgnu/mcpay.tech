@@ -7,6 +7,7 @@
 
 import { mcpServers, mcpTools } from "@/lib/gateway/db/schema";
 import type { Network } from "./blockchain";
+import type { MCPToolPaymentInfo } from "./payments";
 
 // =============================================================================
 // DB-INFERRED MCP TYPES
@@ -250,6 +251,18 @@ export type PaymentToolCall = {
     id: string;
     address: string;
   };
+};
+
+/** Tool call type specific to MCP route handling with enhanced metadata */
+export type MCPRouteToolCall = {
+  name: string;
+  args: Record<string, unknown>;
+  isPaid: boolean;
+  payment?: MCPToolPaymentInfo;
+  id?: string;
+  toolId?: string;
+  serverId?: string;
+  pricingId?: string; // Include pricing ID for usage tracking
 };
 
 // =============================================================================

@@ -140,6 +140,7 @@ export type {
   // Tool call types
   ToolCall,
   PaymentToolCall,
+  MCPRouteToolCall,
   
   // Analytics types
   AnalyticsData,
@@ -213,6 +214,7 @@ export type {
   // Payment info types
   PaymentInfo,
   ToolPaymentInfo,
+  MCPToolPaymentInfo,
   
   // Payment strategy types
   PaymentStrategyConfig,
