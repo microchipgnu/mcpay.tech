@@ -40,87 +40,9 @@ import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import type { ServerTool, ConvertedTool, ServerData } from '@/types'
 
-// Types based on the database schema - matching the actual schema.ts structure
-interface ServerTool {
-  id: string
-  name: string
-  description: string
-  inputSchema: Record<string, unknown>
-  isMonetized: boolean
-  payment?: Record<string, unknown>
-  status: string
-  metadata?: Record<string, unknown>
-  createdAt: string
-  updatedAt: string
-  pricing: Array<{
-    id: string
-    priceRaw: string // Base units as string (from NUMERIC(38,0))
-    tokenDecimals: number // Decimals for the token
-    currency: string // Token symbol or contract address
-    network: string
-    assetAddress?: string
-    active: boolean
-    createdAt: string
-    updatedAt: string
-  }>
-  payments: Array<{
-    id: string
-    amountRaw: string // Base units as string (from NUMERIC(38,0))
-    tokenDecimals: number // Decimals for the token
-    currency: string // Token symbol or contract address
-    network: string
-    status: string
-    createdAt: string
-    settledAt?: string
-    transactionHash?: string
-    user: {
-      id: string
-      walletAddress?: string
-      displayName?: string
-      name?: string
-    }
-  }>
-  usage: Array<{
-    id: string
-    timestamp: string
-    responseStatus?: string
-    executionTimeMs?: number
-    user: {
-      id: string
-      walletAddress?: string
-      displayName?: string
-      name?: string
-    }
-  }>
-  proofs: Array<{
-    id: string
-    isConsistent: boolean
-    confidenceScore: string // Decimal as string
-    status: string
-    verificationType: string
-    createdAt: string
-    webProofPresentation?: string
-    user: {
-      id: string
-      walletAddress?: string
-      displayName?: string
-      name?: string
-    }
-  }>
-}
-
-// Type for the converted tool format used by ToolExecutionModal
-interface ConvertedTool extends Omit<ServerTool, 'pricing'> {
-  pricing: Array<{
-    id: string
-    price: string
-    currency: string
-    network: string
-    assetAddress: string
-    active: boolean
-  }>
-}
+// Types are now imported from centralized location
 
 interface ServerData {
   id: string

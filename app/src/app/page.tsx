@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import { useTheme } from "@/components/providers/theme-context"
 import { urlUtils, textUtils } from "@/lib/client/utils"
+import type { APITool, MCPTool, MCPInputPropertySchema, MCPServer, APIServer, AnalyticsData, SearchState } from '@/types'
 import {
   AlertCircle,
   ArrowRight,
@@ -27,112 +28,9 @@ import {
 import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
 
-// API response types
-interface APITool {
-  id: string;
-  name: string;
-  description: string;
-  inputSchema: Record<string, unknown>;
-  isMonetized: boolean;
-  payment: Record<string, unknown> | null;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface MCPTool {
-  name: string
-  description?: string
-  inputSchema: {
-    type: string
-    properties: Record<string, MCPInputPropertySchema>
-  }
-  annotations?: {
-    title?: string
-    readOnlyHint?: boolean
-    destructiveHint?: boolean
-    idempotentHint?: boolean
-    openWorldHint?: boolean
-  }
-}
-
-interface MCPInputPropertySchema {
-  type: string;
-  description?: string;
-  [key: string]: unknown;
-}
-export interface MCPServer { // Exporting MCPServer as it's used in the props
-  id: string
-  name: string
-  description: string
-  url: string
-  category: string
-  tools: MCPTool[]
-  icon: React.ReactNode
-  verified?: boolean
-}
-
+// Types are now imported from centralized location
 // Note: Backend supports multi-wallet and blockchain-agnostic user management
 // Frontend currently displays single wallet but is prepared for multi-wallet features
-
-interface APIServer {
-  id: string;
-  serverId: string;
-  name: string;
-  receiverAddress: string;
-  description: string;
-  metadata?: Record<string, unknown>;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-  tools: APITool[];
-}
-
-interface AnalyticsData {
-  totalRequests: number;
-  successfulRequests: number;
-  failedRequests: number;
-  successRate: number;
-  averageExecutionTime: number;
-  totalRevenue: number;
-  totalPayments: number;
-  averagePaymentValue: number;
-  totalServers: number;
-  activeServers: number;
-  totalTools: number;
-  monetizedTools: number;
-  uniqueUsers: number;
-  totalProofs: number;
-  consistentProofs: number;
-  consistencyRate: number;
-  topToolsByRequests: Array<{
-    id: string;
-    name: string;
-    requests: number;
-    revenue: number;
-  }>;
-  topToolsByRevenue: Array<{
-    id: string;
-    name: string;
-    requests: number;
-    revenue: number;
-  }>;
-  dailyActivity: Array<{
-    date: string;
-    requests: number;
-    revenue: number;
-    uniqueUsers: number;
-  }>;
-}
-
-// Search state type
-interface SearchState {
-  query: string;
-  results: MCPServer[];
-  isActive: boolean;
-  isLoading: boolean;
-  error: string | null;
-}
 
 const transformServerData = (apiServer: APIServer): MCPServer => ({
   id: apiServer.serverId,
