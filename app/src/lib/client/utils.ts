@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import type { ApiResponse, ApiError } from '@/types'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -96,18 +97,6 @@ export const urlUtils = {
   getMcpUrl: (serverId: string) => {
     return `${window.location.origin}/mcp/${serverId}`
   },
-}
-
-// API Response types
-export interface ApiResponse<T = unknown> {
-  data?: T
-  error?: string
-  details?: unknown
-}
-
-export interface ApiError extends Error {
-  status?: number
-  details?: unknown
 }
 
 // API utility function with proper error handling

@@ -42,44 +42,7 @@ import Image from "next/image"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import { useAccount, useDisconnect } from "wagmi"
-
-interface AccountModalProps {
-  isOpen: boolean
-  onClose: () => void
-  defaultTab?: 'profile' | 'wallets' | 'settings'
-}
-
-interface ChainBalance {
-  chain: string
-  network: string
-  balance: string
-  balanceUsd: number
-  tokens: Array<{
-    symbol: string
-    balance: string
-    balanceUsd: number
-    address?: string
-  }>
-}
-
-interface BalancesByChain {
-  [chainName: string]: Array<{
-    address: string
-    chain: string
-    chainId: number
-    chainName: string
-    architecture: string
-    isTestnet: boolean
-    stablecoin: string
-    stablecoinName: string
-    tokenIdentifier: string
-    balance: string
-    formattedBalance: string
-    decimals: number
-    priceUsd: number
-    fiatValue: number
-  }>
-}
+import type { AccountModalProps, ChainBalance, BalancesByChain } from '@/types'
 
 export function AccountModal({ isOpen, onClose, defaultTab = 'profile' }: AccountModalProps) {
   const { isDark } = useTheme()

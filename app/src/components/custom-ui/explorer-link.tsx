@@ -3,21 +3,9 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { openExplorer, copyExplorerUrl, getExplorerName, hasExplorer } from "@/lib/client/blockscout"
-import { type Network } from "@/lib/commons"
 import { ExternalLink, Copy, Check } from "lucide-react"
 import { useState } from "react"
-
-interface ExplorerLinkProps {
-  hash: string
-  network: Network
-  type?: 'address' | 'tx'
-  variant?: 'link' | 'button' | 'badge'
-  showIcon?: boolean
-  showExplorerName?: boolean
-  showCopyButton?: boolean
-  className?: string
-  children?: React.ReactNode
-}
+import type { ExplorerLinkProps } from '@/types'
 
 export function ExplorerLink({
   hash,
