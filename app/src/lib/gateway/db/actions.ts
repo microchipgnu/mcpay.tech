@@ -53,7 +53,7 @@ import {
 import { and, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
 
 // Define proper transaction type
-export type TransactionType = Parameters<Parameters<typeof db['transaction']>[0]>[0];
+// TransactionType is now centralized in @/types
 
 // Helper function to process revenue details from views into RevenueByCurrency format
 function processRevenueDetails(revenueDetails: RevenueDetails): { revenueByCurrency: RevenueByCurrency; totalRevenue: number } {

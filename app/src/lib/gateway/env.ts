@@ -74,7 +74,7 @@ function parseEnv() {
 export const env = parseEnv();
 
 // Type for the environment object
-export type Env = typeof env;
+// Env type is now centralized in @/types
 
 // Helper functions for specific use cases
 export const isDevelopment = () => env.NODE_ENV === 'development';

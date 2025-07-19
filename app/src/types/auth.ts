@@ -132,6 +132,31 @@ export interface CDPWalletMetadata {
   [key: string]: unknown; // Allow additional properties
 }
 
+// CDP wallet metadata interface used across auth and payment strategies
+export interface CDPWalletMetadata {
+  isSmartAccount?: boolean;
+  ownerAccountId?: string;
+  cdpNetwork?: string;
+  cdpAccountId?: string;
+  cdpAccountName?: string;
+  provider?: string;
+  type?: string;
+  createdByService?: boolean;
+  managedBy?: string;
+  gasSponsored?: boolean;
+  balanceCache?: Record<string, unknown>;
+  lastUpdated?: string;
+  [key: string]: unknown;
+}
+
+// Environment configuration type
+export type Env = {
+  [key: string]: string | undefined;
+};
+
+// Transaction type for database operations
+export type TransactionType = any; // Will be properly typed when database actions are used
+
 // =============================================================================
 // SESSION TYPES
 // =============================================================================

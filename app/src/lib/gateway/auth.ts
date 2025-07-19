@@ -5,19 +5,7 @@ import { getGitHubConfig } from "@/lib/gateway/env";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { randomUUID } from "crypto";
-
-// Interface for CDP wallet metadata structure
-interface CDPWalletMetadata {
-  cdpAccountId?: string;
-  cdpAccountName?: string;
-  cdpNetwork?: string;
-  isSmartAccount?: boolean;
-  ownerAccountId?: string;
-  provider?: string;
-  type?: string;
-  gasSponsored?: boolean;
-  [key: string]: unknown; // Allow additional properties
-}
+import type { CDPWalletMetadata } from '@/types';
 
 
 export const auth = betterAuth({

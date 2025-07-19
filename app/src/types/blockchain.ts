@@ -188,9 +188,17 @@ export interface MultiChainStablecoinResult {
   networks: Network[];
 }
 
+// =============================================================================
+// BLOCKCHAIN CLIENT INTERFACES
+// =============================================================================
+
+// Abstract interface for stablecoin balance clients
 export interface StablecoinClient {
-  getBalance(address: BlockchainAddress): Promise<StablecoinBalance>;
-  getPrice(): Promise<number>;
+  getTokenBalance(
+    address: string, 
+    tokenConfig: any, // Will be properly typed based on actual token config types
+    chainConfig: any  // Will be properly typed based on actual chain config types
+  ): Promise<bigint>;
 }
 
 // =============================================================================

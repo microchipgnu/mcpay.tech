@@ -339,3 +339,110 @@ export type { Network, TokenInfo, NetworkInfo } from './ui';
  * Update this when making breaking changes to the type system
  */
 export const TYPE_SYSTEM_VERSION = '1.0.0' as const;
+
+// =============================================================================
+// API & CLIENT TYPES
+// =============================================================================
+export type {
+  // API route types
+  McpServerList,
+  McpServerWithRelations,
+  McpServerWithActivity,
+  ToolPaymentInfo,
+  ExecutionHeaders,
+  AuthSession,
+  AppContext,
+  SerializeBigInts,
+  
+  // Page data types
+  APITool,
+  MCPTool,
+  MCPInputPropertySchema,
+  APIServer,
+  AnalyticsData,
+  SearchState,
+  
+  // Server detail page types
+  ServerTool,
+  ConvertedTool,
+  ServerData,
+  
+  // Registration page types
+  MCPRegistrationTool,
+  PaymentInfo,
+  Tool,
+  RegistrationMetadata,
+  RegistrationData,
+  
+  // Account modal types
+  AccountModalProps,
+  ChainBalance,
+  BalancesByChain,
+  
+  // Tool execution modal types
+  InputProperty,
+  ToolInputSchema,
+  ToolForExecution,
+  ToolExecutionModalProps,
+  ToolExecution,
+  MCPToolInputSchema,
+  MCPToolFromClient,
+} from './api';
+
+// =============================================================================
+// ADDITIONAL AUTH TYPES
+// =============================================================================
+export type {
+  CDPWalletMetadata,
+  Env,
+  TransactionType,
+} from './auth';
+
+// =============================================================================
+// ADDITIONAL BLOCKCHAIN TYPES
+// =============================================================================
+export type {
+  StablecoinClient,
+} from './blockchain';
+
+// =============================================================================
+// ADDITIONAL PAYMENT TYPES
+// =============================================================================
+export type {
+  PaymentStrategyConfig,
+  CDPWallet,
+} from './payments';
+
+// =============================================================================
+// ADDITIONAL UI TYPES
+// =============================================================================
+export type {
+  // Wallet UI types
+  EthereumProvider,
+  WalletWindow,
+  WalletError,
+  
+  // Modal & hook types
+  AccountModalTab,
+  UseAccountModalReturn,
+  
+  // Pagination types
+  PaginationLinkProps,
+  
+  // Carousel types
+  CarouselProps,
+  CarouselContextProps,
+  
+  // Chart types
+  ChartConfig,
+  ChartContextProps,
+  
+  // Form types
+  FormItemContextValue,
+  
+  // Theme types
+  ThemeContextType,
+  
+  // Explorer link types
+  ExplorerLinkProps,
+} from './ui';

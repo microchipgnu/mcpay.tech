@@ -1,19 +1,6 @@
 import { type Connector } from 'wagmi'
 import { type Network, NETWORKS, getNetworkByChainId, type NetworkInfo } from '@/lib/commons'
-
-// Type definitions for wallet providers
-interface EthereumProvider {
-  isMetaMask?: boolean
-  isCoinbaseWallet?: boolean
-  isPorto?: boolean
-  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>
-}
-
-interface WalletWindow {
-  ethereum?: EthereumProvider
-  coinbaseWalletExtension?: unknown
-  porto?: unknown
-}
+import type { EthereumProvider, WalletWindow, WalletError } from '@/types'
 
 // Helper function to get wallet window
 function getWalletWindow(): WalletWindow {
@@ -234,10 +221,7 @@ export function getConnectionStatus(
   }
 }
 
-// Error type for wallet operations
-interface WalletError extends Error {
-  code?: number
-}
+
 
 // Generic network switching function
 export async function switchToNetwork(network: Network): Promise<boolean> {

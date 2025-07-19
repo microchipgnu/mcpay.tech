@@ -41,7 +41,8 @@ import type {
   SolanaTokenConfig,
   NearTokenConfig,
   BlockchainAddress,
-  PriceProvider
+  PriceProvider,
+  StablecoinClient
 } from '@/types';
 import {
   STABLECOIN_CONFIGS,
@@ -68,14 +69,7 @@ import {
 // STABLECOIN CLIENT INTERFACES & IMPLEMENTATIONS
 // =============================================================================
 
-// Abstract interface for blockchain clients
-interface StablecoinClient {
-  getTokenBalance(
-    address: BlockchainAddress, 
-    tokenConfig: EVMTokenConfig | SolanaTokenConfig | NearTokenConfig, 
-    chainConfig: ChainConfig
-  ): Promise<bigint>;
-}
+
 
 // EVM client implementation using viem
 class EVMStablecoinClient implements StablecoinClient {

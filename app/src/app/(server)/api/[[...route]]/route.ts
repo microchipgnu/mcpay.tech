@@ -18,72 +18,24 @@ import { Hono, type Context, type Next } from "hono";
 import { handle } from "hono/vercel";
 import { randomUUID } from "node:crypto";
 
-// Type definitions for MCP Server objects - using inferred types from database operations
-type McpServerList = Awaited<ReturnType<ReturnType<typeof txOperations.listMcpServers>>>;
-type McpServerWithRelations = McpServerList[number];
-type McpServerWithActivity = Awaited<ReturnType<ReturnType<typeof txOperations.listMcpServersByActivity>>>[number];
-
-// Interface for CDP wallet metadata
-interface CDPWalletMetadata {
-    isSmartAccount?: boolean;
-    ownerAccountId?: string;
-    cdpNetwork?: string;
-    cdpAccountId?: string;
-    cdpAccountName?: string;
-    provider?: string;
-    type?: string;
-    createdByService?: boolean;
-    managedBy?: string;
-    gasSponsored?: boolean;
-    balanceCache?: Record<string, unknown>;
-    lastUpdated?: string;
-    [key: string]: unknown;
-}
-
-// Interface for payment information from tools
-interface ToolPaymentInfo {
-    maxAmountRequired: string; // Base units as string for precision
-    asset: string;
-    network: string;
-    resource?: string;
-    description?: string;
-}
-
-// Interface for execution headers stored in database
-interface ExecutionHeaders {
-    headers: string[];
-}
+// Import centralized types
+import type {
+  McpServerList,
+  McpServerWithRelations,
+  McpServerWithActivity,
+  CDPWalletMetadata,
+  ToolPaymentInfo,
+  ExecutionHeaders,
+  AuthSession,
+  AppContext,
+  SerializeBigInts
+} from '@/types';
     
 export const runtime = 'nodejs'
-
-// Better-auth session type (inferred from auth instance)
-type AuthSession = typeof auth.$Infer.Session;
-
-// Extend Hono context with proper typing
-type AppContext = {
-    Variables: {
-        // Optional session and user - will be undefined if not authenticated
-        session?: AuthSession['session'];
-        user?: AuthSession['user'];
-        // Helper method to get authenticated user (throws if not authenticated)
-        requireUser(): AuthSession['user'];
-    };
-}
 
 const app = new Hono<{ Bindings: AuthType }>({
     strict: false,
 }).basePath('/api')
-
-/**
- * Type helper to recursively convert BigInt values to strings in type definitions
- */
-type SerializeBigInts<T> = T extends bigint
-    ? string
-    : T extends Array<infer U>
-    ? Array<SerializeBigInts<U>>
-    : T extends Record<string, unknown>
-    ? { [K in keyof T]: SerializeBigInts<T[K]> }
-    : T;
 
 /**
  * Helper function to recursively convert BigInt values to strings for JSON serialization

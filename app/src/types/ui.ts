@@ -148,3 +148,135 @@ export type AppContext = {
 // =============================================================================
 
 export type AuthSession = any; // typeof auth.$Infer.Session - will be properly typed when available
+
+// =============================================================================
+// WALLET UI TYPES
+// =============================================================================
+
+// Ethereum provider interface for wallet connections
+export interface EthereumProvider {
+  isMetaMask?: boolean;
+  isCoinbaseWallet?: boolean;
+  isPorto?: boolean;
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+}
+
+// Wallet window interface for browser wallet detection
+export interface WalletWindow {
+  ethereum?: EthereumProvider;
+  coinbaseWalletExtension?: unknown;
+  porto?: unknown;
+}
+
+// Wallet error interface
+export interface WalletError extends Error {
+  code?: number;
+  data?: unknown;
+}
+
+// =============================================================================
+// MODAL & HOOK TYPES
+// =============================================================================
+
+// Account modal tab types
+export type AccountModalTab = 'profile' | 'wallets' | 'settings';
+
+// Account modal hook return type
+export interface UseAccountModalReturn {
+  isOpen: boolean;
+  defaultTab: AccountModalTab;
+  openModal: (tab?: AccountModalTab) => void;
+  closeModal: () => void;
+}
+
+// =============================================================================
+// PAGINATION TYPES
+// =============================================================================
+
+// Pagination link props
+export type PaginationLinkProps = {
+  href: string;
+  isActive?: boolean;
+  disabled?: boolean;
+  children: React.ReactNode;
+  className?: string;
+};
+
+// =============================================================================
+// CAROUSEL TYPES
+// =============================================================================
+
+// Carousel component props
+export type CarouselProps = {
+  opts?: Record<string, unknown>;
+  plugins?: unknown[];
+  orientation?: 'horizontal' | 'vertical';
+  setApi?: (api: unknown) => void;
+  className?: string;
+  children: React.ReactNode;
+};
+
+// Carousel context props
+export type CarouselContextProps = {
+  carouselRef: React.RefObject<HTMLDivElement>;
+  api: unknown;
+  scrollPrev: () => void;
+  scrollNext: () => void;
+  canScrollPrev: boolean;
+  canScrollNext: boolean;
+  orientation: 'horizontal' | 'vertical';
+};
+
+// =============================================================================
+// CHART TYPES
+// =============================================================================
+
+// Chart configuration type
+export type ChartConfig = {
+  [key: string]: {
+    label?: string;
+    icon?: React.ComponentType;
+    color?: string;
+    theme?: {
+      light?: string;
+      dark?: string;
+    };
+  };
+};
+
+// Chart context props
+export type ChartContextProps = {
+  config: ChartConfig;
+};
+
+// =============================================================================
+// FORM TYPES
+// =============================================================================
+
+// Form item context value
+export type FormItemContextValue = {
+  id: string;
+};
+
+// =============================================================================
+// THEME TYPES
+// =============================================================================
+
+// Theme context type
+export interface ThemeContextType {
+  isDark: boolean;
+  toggleTheme: () => void;
+}
+
+// =============================================================================
+// EXPLORER LINK TYPES
+// =============================================================================
+
+// Explorer link props
+export interface ExplorerLinkProps {
+  hash: string;
+  network: string;
+  type?: 'tx' | 'address' | 'block';
+  className?: string;
+  children?: React.ReactNode;
+}

@@ -274,6 +274,54 @@ export interface PaymentSigningStrategy {
 }
 
 // =============================================================================
+// PAYMENT STRATEGY CONFIGURATION
+// =============================================================================
+
+// Payment strategy configuration interface
+export interface PaymentStrategyConfig {
+  enabled: boolean;
+  fallbackBehavior: 'fail' | 'continue' | 'log_only';
+  maxRetries: number;
+  timeoutMs: number;
+  strategies: {
+    cdp: {
+      enabled: boolean;
+      priority: number;
+      preferSmartAccounts: boolean;
+      networks: string[];
+      maxWalletsToTry: number;
+    };
+    privy: {
+      enabled: boolean;
+      priority: number;
+      networks: string[];
+    };
+    magic: {
+      enabled: boolean;
+      priority: number;
+      networks: string[];
+    };
+  };
+  logging: {
+    level: 'debug' | 'info' | 'warn' | 'error';
+    logSuccessfulSigning: boolean;
+    logFailedAttempts: boolean;
+    logAuthenticationDetails: boolean;
+  };
+}
+
+// CDP wallet interface for payment strategies
+export interface CDPWallet {
+  id: string;
+  networkId: string;
+  accountId: string;
+  defaultAddress: {
+    id: string;
+    network: string;
+  };
+}
+
+// =============================================================================
 // CDP PAYMENT TYPES
 // =============================================================================
 
