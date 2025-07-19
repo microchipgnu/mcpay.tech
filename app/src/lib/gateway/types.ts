@@ -2,6 +2,7 @@ import type { PaymentRequirements as BasePaymentRequirements, FacilitatorConfig 
 import { z } from "zod";
 import { type Account, type Address, type Chain, type Client, getAddress, type Hex, type LocalAccount, type PublicActions, type RpcSchema, toHex, type Transport, type WalletActions } from "viem";
 import { ErrorReasons, x402Versions, type Network } from "x402/types";
+import type { ChainConfig } from "@/types";
 
 export const DEFAULT_FACILITATOR_URL = "https://x402.org/facilitator";
 
@@ -376,11 +377,6 @@ export const config: Record<string, ChainConfig> = {
         usdcAddress: "0x4fCF1784B31630811181f670Aea7A7bEF803eaED",
         usdcName: "USDC",
     },
-};
-
-export type ChainConfig = {
-    usdcAddress: Address;
-    usdcName: string;
 };
 
 // Extended network schema that includes additional networks

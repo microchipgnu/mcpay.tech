@@ -2,5 +2,10 @@
  * Blockchain and chain-related types
  */
 
-// TODO: Migrate blockchain types here
-export {};
+import type { Address } from "viem";
+
+/** Simple chain configuration with USDC info */
+export type ChainConfig = {
+    usdcAddress: Address;
+    usdcName: string;
+};

@@ -17,42 +17,14 @@ import { getMcpTools } from "@/lib/gateway/inspect-mcp";
 import { Hono, type Context, type Next } from "hono";
 import { handle } from "hono/vercel";
 import { randomUUID } from "node:crypto";
+import type { CDPWalletMetadata, ToolPaymentInfo, ExecutionHeaders } from "@/types";
 
 // Type definitions for MCP Server objects - using inferred types from database operations
 type McpServerList = Awaited<ReturnType<ReturnType<typeof txOperations.listMcpServers>>>;
 type McpServerWithRelations = McpServerList[number];
 type McpServerWithActivity = Awaited<ReturnType<ReturnType<typeof txOperations.listMcpServersByActivity>>>[number];
 
-// Interface for CDP wallet metadata
-interface CDPWalletMetadata {
-    isSmartAccount?: boolean;
-    ownerAccountId?: string;
-    cdpNetwork?: string;
-    cdpAccountId?: string;
-    cdpAccountName?: string;
-    provider?: string;
-    type?: string;
-    createdByService?: boolean;
-    managedBy?: string;
-    gasSponsored?: boolean;
-    balanceCache?: Record<string, unknown>;
-    lastUpdated?: string;
-    [key: string]: unknown;
-}
-
-// Interface for payment information from tools
-interface ToolPaymentInfo {
-    maxAmountRequired: string; // Base units as string for precision
-    asset: string;
-    network: string;
-    resource?: string;
-    description?: string;
-}
-
-// Interface for execution headers stored in database
-interface ExecutionHeaders {
-    headers: string[];
-}
+// Types are now imported from centralized location
     
 export const runtime = 'nodejs'
 

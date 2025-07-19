@@ -12,6 +12,7 @@
 import { fromBaseUnits } from "@/lib/commons";
 import { type AuthType } from "@/lib/gateway/auth";
 import { txOperations, withTransaction } from "@/lib/gateway/db/actions";
+import type { ToolCall, DbToolResult, PaymentInfo } from "@/types";
 import { users } from "@/lib/gateway/db/schema";
 import { attemptAutoSign } from "@/lib/gateway/payment-strategies";
 import { createExactPaymentRequirements, decodePayment, settle, verifyPayment, x402Version } from "@/lib/gateway/payments";
@@ -33,52 +34,7 @@ type UserWithWallet = User & {
     walletAddress: string; // Primary wallet address for API compatibility
 };
 
-// Define payment information structure based on database schema
-interface PaymentInfo {
-    maxAmountRequired: string;
-    network: string;
-    asset: string;
-    payTo?: string;
-    resource: string;
-    description: string;
-    // Optional pricing metadata when using tool_pricing table
-    _pricingInfo?: {
-        humanReadableAmount: string;
-        currency: string;
-        network: string;
-        tokenDecimals: number;
-        assetAddress?: string;
-        priceRaw: string; // Original base units from pricing table
-        pricingId: string; // Pricing ID for usage tracking
-    };
-}
-
-// Define tool configuration type based on database query results
-interface DbToolResult {
-    id: string;
-    name: string;
-    description: string;
-    inputSchema: unknown;
-    isMonetized: boolean;
-    payment: unknown;
-    status: string;
-    metadata: unknown;
-    createdAt: Date;
-    updatedAt: Date;
-    serverId: string;
-}
-
-// Define tool call type for better type safety
-type ToolCall = {
-    name: string;
-    args: Record<string, unknown>;
-    isPaid: boolean;
-    payment?: PaymentInfo;
-    id?: string;
-    toolId?: string;
-    serverId?: string;
-    pricingId?: string; // Include pricing ID for usage tracking
-};
+// Types are now imported from centralized location
 
 // Headers that must NOT be forwarded (RFC‑7230 §6.1)
 const HOP_BY_HOP = new Set([

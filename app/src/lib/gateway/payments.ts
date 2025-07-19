@@ -29,6 +29,7 @@ import { PaymentPayloadSchema, safeBase64Decode, type SupportedNetwork, type Pay
 import { createFacilitator } from "@/lib/gateway/types";
 import { getFacilitatorUrl } from "@/lib/gateway/env";
 import { toBaseUnits } from "@/lib/commons";
+import type { ChainConfig } from "@/types";
 
 /**
  * Parses the amount from the given price using precise arithmetic
@@ -140,11 +141,6 @@ export const config: Record<string, ChainConfig> = {
         usdcAddress: "0x4fCF1784B31630811181f670Aea7A7bEF803eaED",
         usdcName: "USDC",
     },
-};
-
-export type ChainConfig = {
-    usdcAddress: Address;
-    usdcName: string;
 };
 
 // Network-specific facilitator URLs

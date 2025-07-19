@@ -10,28 +10,7 @@ import { useTheme } from "@/components/providers/theme-context"
 import { openBlockscout } from "@/lib/client/blockscout"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-
-// Type definitions for registration data
-interface PaymentInfo {
-  maxAmountRequired: number
-  asset: string
-  network: string
-  resource: string
-  description: string
-}
-
-interface Tool {
-  name: string
-  description: string
-  payment?: PaymentInfo
-}
-
-interface RegistrationMetadata {
-  timestamp: string
-  toolsCount: number
-  registeredFromUI: boolean
-  monetizedToolsCount: number
-}
+import type { PaymentInfoLegacy as PaymentInfo, Tool, RegistrationMetadata } from "@/types"
 
 interface RegistrationData {
   id: string
