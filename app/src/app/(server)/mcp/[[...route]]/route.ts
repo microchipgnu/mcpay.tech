@@ -12,7 +12,7 @@
 import { fromBaseUnits } from "@/lib/commons";
 import { type AuthType } from "@/lib/gateway/auth";
 import { txOperations, withTransaction } from "@/lib/gateway/db/actions";
-import type { ToolCall, DbToolResult, PaymentInfo } from "@/types";
+import type { ToolCall, DbToolResult, PaymentInfo, User } from "@/types";
 import { users } from "@/lib/gateway/db/schema";
 import { attemptAutoSign } from "@/lib/gateway/payment-strategies";
 import { createExactPaymentRequirements, decodePayment, settle, verifyPayment, x402Version } from "@/lib/gateway/payments";
@@ -26,8 +26,7 @@ const app = new Hono<{ Bindings: AuthType }>({
     strict: false,
 }).basePath("/mcp")
 
-// Use Drizzle-inferred types from schema
-type User = typeof users.$inferSelect;
+// Types are now imported from centralized location
 
 // Enhanced User type that includes wallet information for API usage
 type UserWithWallet = User & {

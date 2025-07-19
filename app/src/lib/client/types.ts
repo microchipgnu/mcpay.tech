@@ -1,35 +1,11 @@
 // Enhanced types for multi-wallet and blockchain-agnostic support
+import type { UserWallet, User } from '@/types';
 
-export interface UserWallet {
-  id: string;
-  userId: string;
-  walletAddress: string;
-  blockchain: string; // 'ethereum', 'solana', 'near', etc.
-  walletType: 'external' | 'managed' | 'custodial';
-  provider?: string; // 'metamask', 'coinbase-cdp', 'privy', etc.
-  isPrimary: boolean;
-  isActive: boolean;
-  walletMetadata?: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-}
+// Re-export database types for convenience
+export type { UserWallet, User } from '@/types';
 
-export interface EnhancedUser {
-  id: string;
-  // Legacy wallet field (for backward compatibility)
-  walletAddress?: string;
-  // Traditional auth fields
-  name?: string;
-  email?: string;
-  emailVerified?: boolean;
-  image?: string;
-  // Display fields
-  displayName?: string;
-  avatarUrl?: string;
-  // Timestamps
-  createdAt: string;
-  updatedAt: string;
-  lastLoginAt?: string;
+/** Enhanced user type extending database User with additional fields */
+export interface EnhancedUser extends User {
   // Associated wallets
   wallets?: UserWallet[];
 }
