@@ -258,7 +258,7 @@ export interface ConvertedTool extends Omit<ServerTool, 'pricing'> {
         currency: string;
         network: string;
         assetAddress: string;
-        // Add other converted pricing fields as needed
+        active: boolean; // Adding missing active property
     }>;
 }
 
@@ -312,7 +312,39 @@ export interface ServerData {
             walletAddress?: string;
             displayName?: string;
             name?: string;
-            // Add other fields as needed
         };
     }>;
+    proofs: Array<{
+        id: string;
+        isConsistent: boolean;
+        confidenceScore: string; // Decimal as string
+        status: string;
+        verificationType: string;
+        createdAt: string;
+        webProofPresentation?: string;
+        tool: {
+            id: string;
+            name: string;
+        };
+        user: {
+            id: string;
+            walletAddress?: string;
+            displayName?: string;
+            name?: string;
+        };
+    }>;
+    stats: {
+        totalTools: number;
+        monetizedTools: number;
+        totalPayments: number;
+        totalRevenue: number; // Computed value in USD
+        totalUsage: number;
+        totalProofs: number;
+        consistentProofs: number;
+        proofsWithWebProof: number;
+        uniqueUsers: number;
+        avgResponseTime: number;
+        reputationScore: number;
+        lastActivity: string;
+    };
 }
