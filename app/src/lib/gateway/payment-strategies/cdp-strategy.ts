@@ -17,21 +17,9 @@ import { baseSepolia, seiTestnet } from "viem/chains";
 import { txOperations, withTransaction } from "@/lib/gateway/db/actions";
 import { getCDPAccount, isSupportedCDPNetwork, type CDPNetwork } from "@/lib/gateway/3rd-parties/cdp";
 import { x402Version } from "@/lib/gateway/payments";
-import { createPaymentHeader, type ExtendedPaymentRequirements } from "@/lib/gateway/types";
-import type { PaymentSigningContext, PaymentSigningResult, PaymentSigningStrategy } from "@/lib/gateway/payment-strategies/index";
-
-// Interface for CDP wallet metadata structure
-interface CDPWalletMetadata {
-  cdpAccountId?: string;
-  cdpAccountName?: string;
-  cdpNetwork?: string;
-  isSmartAccount?: boolean;
-  ownerAccountId?: string;
-  provider?: string;
-  type?: string;
-  gasSponsored?: boolean;
-  [key: string]: unknown; // Allow additional properties
-}
+import { createPaymentHeader } from "@/lib/gateway/types";
+import type { ExtendedPaymentRequirements, CDPWalletMetadata } from "@/types";
+import type { PaymentSigningContext, PaymentSigningResult, PaymentSigningStrategy } from "@/types";
 
 // Type for CDP wallet from database (matches the actual return type from database)
 interface CDPWallet {

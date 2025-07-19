@@ -26,7 +26,7 @@ import type {
   NearTokenConfig,
   BlockchainAddress,
   PriceProvider
-} from './types';
+} from '@/types';
 
 // =============================================================================
 // STABLECOIN CONFIGURATIONS
@@ -217,7 +217,7 @@ export const SUPPORTED_CHAINS: Record<string, ChainConfig> = {
   } as NearChainConfig,
 };
 
-export type SupportedChain = keyof typeof SUPPORTED_CHAINS;
+// SupportedChain type is now centralized in @/types
 
 // =============================================================================
 // TYPE GUARDS

@@ -21,47 +21,14 @@ import { txOperations, withTransaction } from "@/lib/gateway/db/actions";
 import { extractApiKeyFromHeaders, hashApiKey, isValidApiKeyFormat } from "@/lib/gateway/auth-utils";
 import { auth } from "@/lib/gateway/auth";
 import { createExactPaymentRequirements } from "@/lib/gateway/payments";
-import type { ExtendedPaymentRequirements, SupportedNetwork } from "@/lib/gateway/types";
+import type { ExtendedPaymentRequirements, SupportedNetwork } from "@/types";
 import { CDPSigningStrategy } from "@/lib/gateway/payment-strategies/cdp-strategy";
-import { getConfig, type PaymentStrategyConfig } from "@/lib/gateway/payment-strategies/config";
+import { getConfig } from "@/lib/gateway/payment-strategies/config";
+import type { PaymentStrategyConfig, PaymentSigningContext, PaymentSigningResult, PaymentSigningStrategy } from "@/types";
 
 
-// Type definitions
-export interface PaymentSigningContext {
-    toolCall: {
-        isPaid: boolean;
-        payment: {
-            maxAmountRequired: string;
-            network: string;
-            asset: string;
-            payTo?: string;
-            resource: string;
-            description: string;
-        };
-    };
-    user?: {
-        id: string;
-        email?: string;
-        name?: string;
-        displayName?: string;
-    };
-    paymentRequirements: ExtendedPaymentRequirements[];
-}
-
-export interface PaymentSigningResult {
-    success: boolean;
-    signedPaymentHeader?: string;
-    error?: string;
-    strategy?: string;
-    walletAddress?: string;
-}
-
-export interface PaymentSigningStrategy {
-    name: string;
-    priority: number;
-    canSign(context: PaymentSigningContext): Promise<boolean>;
-    signPayment(context: PaymentSigningContext): Promise<PaymentSigningResult>;
-}
+// Types are now centralized in @/types
+// These were different from our centralized types - updating to use centralized ones
 
 // Authentication detection utilities
 export async function detectAuthentication(c: Context): Promise<{

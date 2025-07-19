@@ -18,7 +18,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { signIn, signOut, useSession } from "@/lib/client/auth"
 import { openExplorer } from "@/lib/client/blockscout"
-import type { UserWallet } from "@/lib/client/types"
+import type { UserWallet } from "@/types"
 import { api, apiCall } from "@/lib/client/utils"
 import {
   AlertCircle,

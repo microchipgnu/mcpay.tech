@@ -12,7 +12,7 @@
  */
 
 import { formatAmount, toBaseUnits } from './amounts';
-import type { Network, TokenInfo, NetworkInfo } from './types';
+import type { Network, TokenInfo, NetworkInfo } from '@/types';
 
 // =============================================================================
 // NETWORK CONFIGURATIONS

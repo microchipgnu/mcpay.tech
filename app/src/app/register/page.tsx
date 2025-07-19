@@ -22,6 +22,7 @@ import { useAccount, useConnect, useDisconnect } from "wagmi"
 
 import { getNetworkByChainId } from "@/lib/commons"
 import { useChainId } from "wagmi"
+import type { MCPRegistrationTool } from '@/types'
 
 interface MCPTool {
   name: string

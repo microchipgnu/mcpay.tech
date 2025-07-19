@@ -6,38 +6,7 @@
  */
 
 import env from "@/lib/gateway/env";
-
-export interface PaymentStrategyConfig {
-    enabled: boolean;
-    fallbackBehavior: 'fail' | 'continue' | 'log_only';
-    maxRetries: number;
-    timeoutMs: number;
-    strategies: {
-        cdp: {
-            enabled: boolean;
-            priority: number;
-            preferSmartAccounts: boolean;
-            networks: string[];
-            maxWalletsToTry: number;
-        };
-        privy: {
-            enabled: boolean;
-            priority: number;
-            networks: string[];
-        };
-        magic: {
-            enabled: boolean;
-            priority: number;
-            networks: string[];
-        };
-    };
-    logging: {
-        level: 'debug' | 'info' | 'warn' | 'error';
-        logSuccessfulSigning: boolean;
-        logFailedAttempts: boolean;
-        logAuthenticationDetails: boolean;
-    };
-}
+import type { PaymentStrategyConfig } from '@/types';
 
 // Default configuration
 export const DEFAULT_CONFIG: PaymentStrategyConfig = {

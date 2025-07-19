@@ -41,8 +41,9 @@ import type {
   SolanaTokenConfig,
   NearTokenConfig,
   BlockchainAddress,
-  PriceProvider
-} from './types';
+  PriceProvider,
+  StablecoinClient
+} from '@/types';
 import {
   STABLECOIN_CONFIGS,
   SUPPORTED_CHAINS,
@@ -62,47 +63,13 @@ import {
 // BALANCE RESULT TYPES
 // =============================================================================
 
-export interface MultiChainStablecoinResult {
-  balances: StablecoinBalance[];
-  errors: StablecoinBalanceError[];
-  // Separate totals for mainnet and testnet
-  totalFiatValue: number; // Total fiat value from mainnet chains only
-  testnetTotalFiatValue: number; // Total fiat value from testnet chains (for display purposes)
-  mainnetBalances: StablecoinBalance[]; // Mainnet balances only
-  testnetBalances: StablecoinBalance[]; // Testnet balances only
-  balancesByChain: Partial<Record<SupportedChain, StablecoinBalance[]>>;
-  balancesByStablecoin: Partial<Record<StablecoinSymbol, StablecoinBalance[]>>;
-  // Separate groupings for mainnet and testnet
-  mainnetBalancesByChain: Partial<Record<SupportedChain, StablecoinBalance[]>>;
-  testnetBalancesByChain: Partial<Record<SupportedChain, StablecoinBalance[]>>;
-  mainnetBalancesByStablecoin: Partial<Record<StablecoinSymbol, StablecoinBalance[]>>;
-  testnetBalancesByStablecoin: Partial<Record<StablecoinSymbol, StablecoinBalance[]>>;
-  summary: {
-    totalAccounts: number;
-    totalChainsChecked: number;
-    totalStablecoinsChecked: number;
-    successfulChecks: number;
-    failedChecks: number;
-    // Additional testnet/mainnet breakdown
-    mainnetChainsChecked: number;
-    testnetChainsChecked: number;
-    mainnetSuccessfulChecks: number;
-    testnetSuccessfulChecks: number;
-  };
-}
+// MultiChainStablecoinResult type is now centralized in @/types
 
 // =============================================================================
 // STABLECOIN CLIENT INTERFACES & IMPLEMENTATIONS
 // =============================================================================
 
-// Abstract interface for blockchain clients
-interface StablecoinClient {
-  getTokenBalance(
-    address: BlockchainAddress, 
-    tokenConfig: EVMTokenConfig | SolanaTokenConfig | NearTokenConfig, 
-    chainConfig: ChainConfig
-  ): Promise<bigint>;
-}
+
 
 // EVM client implementation using viem
 class EVMStablecoinClient implements StablecoinClient {

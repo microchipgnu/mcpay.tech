@@ -7,34 +7,9 @@
 
 import { getCDPConfig } from '@/lib/gateway/env';
 import { generateJwt } from '@coinbase/cdp-sdk/auth';
+import type { OnrampAddress, OnrampSessionTokenRequest, OnrampSessionTokenResponse, OnrampUrlOptions } from '@/types';
 
-export interface OnrampAddress {
-  address: string;
-  blockchains: string[];
-}
-
-export interface OnrampSessionTokenRequest {
-  addresses: OnrampAddress[];
-  assets?: string[];
-}
-
-export interface OnrampSessionTokenResponse {
-  token: string;
-  channel_id: string;
-}
-
-export interface OnrampUrlOptions {
-  sessionToken: string;
-  defaultAsset?: string;
-  defaultNetwork?: string;
-  presetFiatAmount?: number;
-  presetCryptoAmount?: number;
-  fiatCurrency?: string;
-  defaultPaymentMethod?: string;
-  defaultExperience?: 'send' | 'buy';
-  partnerUserId?: string;
-  redirectUrl?: string;
-}
+// Onramp types are now centralized in @/types
 
 /**
  * Generate JWT token for CDP API authentication using the official CDP SDK

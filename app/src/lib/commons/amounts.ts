@@ -19,7 +19,7 @@
  * - Multi-currency revenue tracking
  */
 
-import type { FormatAmountOptions, DbAmountRecord, RevenueByCurrency } from './types';
+import type { FormatAmountOptions, DbAmountRecord, RevenueByCurrency } from '@/types';
 
 // =============================================================================
 // ERROR HANDLING

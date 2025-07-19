@@ -5,19 +5,7 @@ import { getGitHubConfig } from "@/lib/gateway/env";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { randomUUID } from "crypto";
-
-// Interface for CDP wallet metadata structure
-interface CDPWalletMetadata {
-  cdpAccountId?: string;
-  cdpAccountName?: string;
-  cdpNetwork?: string;
-  isSmartAccount?: boolean;
-  ownerAccountId?: string;
-  provider?: string;
-  type?: string;
-  gasSponsored?: boolean;
-  [key: string]: unknown; // Allow additional properties
-}
+import type { CDPWalletMetadata } from '@/types';
 
 
 export const auth = betterAuth({
@@ -72,10 +60,7 @@ export const auth = betterAuth({
   // We use middleware approach in api.ts for reliable CDP wallet auto-creation
 });
 
-export type AuthType = {
-  user: typeof auth.$Infer.Session.user | null
-  session: typeof auth.$Infer.Session.session | null
-}
+// AuthType is now centralized in @/types (this specific auth type tied to better-auth)
 
 /**
  * Auto-create CDP wallet for user if they don't have one
