@@ -54,6 +54,22 @@ export default function Navbar() {
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
               }`}
             >
+              <Link href="/build">Build Server</Link>
+            </Button>
+
+            <Button
+              variant="ghost"
+              asChild
+              className={`px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                pathname === "/register"
+                  ? isDark
+                    ? "bg-gray-800 text-white"
+                    : "bg-gray-100 text-gray-900"
+                  : isDark
+                    ? "text-gray-300 hover:bg-gray-800 hover:text-white"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+              }`}
+            >
               <Link href="/register">Register Server</Link>
             </Button>
             
