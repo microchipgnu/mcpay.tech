@@ -20,8 +20,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MCPay.fun",
-  description: "MCPay.fun - Monetize your MCP servers with x402",
+  title: "MCPay",
+  description: "MCPay - Build and Monetize MCP Servers with x402",
   icons: {
     icon: [
       { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },

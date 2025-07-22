@@ -21,6 +21,9 @@ export default function Navbar() {
   const { data: session, isPending: sessionLoading } = useSession()
   const { isOpen, defaultTab, openModal, closeModal } = useAccountModal()
 
+  // Determine logo based on theme
+  const logoSrc = isDark ? "/MCPay-logo-dark.svg" : "/MCPay-logo-light.svg"
+
   return (
     <nav
       className={`sticky top-0 z-40 w-full border-b transition-colors duration-200 ${isDark ? "bg-black/95 backdrop-blur border-gray-800" : "bg-white/95 backdrop-blur border-gray-200"
@@ -30,8 +33,8 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo/Brand */}
           <div className="flex items-center">
-            <Link href="/" className="flex-shrink-0 flex items-center gap-2">
-              <Image src="/mcpay-logo.svg" alt="MCPay Logo" width={72} height={72} />
+            <Link href="/" className="flex-shrink-0 flex items-center gap-3">
+              <Image src={logoSrc} alt="MCPay Logo" width={112} height={72} />
               <Badge variant="outline" className="text-xs">Alpha</Badge>
             </Link>
           </div>
