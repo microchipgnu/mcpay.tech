@@ -246,7 +246,7 @@ const inspectRequest = async (c: Context): Promise<{ toolCall?: ToolCall, body?:
 
                                             // Convert price from base units to human-readable amount
                                             const humanReadableAmount = fromBaseUnits(
-                                                activePricing.priceRaw,
+                                                activePricing.amountRaw,
                                                 activePricing.tokenDecimals
                                             );
 
@@ -263,14 +263,14 @@ const inspectRequest = async (c: Context): Promise<{ toolCall?: ToolCall, body?:
                                                     network: activePricing.network,
                                                     tokenDecimals: activePricing.tokenDecimals,
                                                     assetAddress: activePricing.assetAddress,
-                                                    priceRaw: activePricing.priceRaw, // Keep original base units for reference
+                                                    amountRaw: activePricing.amountRaw, // Keep original base units for reference
                                                     pricingId: activePricing.id // Store pricing ID for usage tracking
                                                 }
                                             };
 
                                             console.log('\x1b[33m%s\x1b[0m', `[${new Date().toISOString()}] Paid tool identified:`);
                                             console.log('\x1b[33m%s\x1b[0m', `  Human-readable amount: ${humanReadableAmount} ${activePricing.currency}`);
-                                            console.log('\x1b[33m%s\x1b[0m', `  Base units amount: ${activePricing.priceRaw}`);
+                                            console.log('\x1b[33m%s\x1b[0m', `  Base units amount: ${activePricing.amountRaw}`);
                                             console.log('\x1b[33m%s\x1b[0m', `  Token decimals: ${activePricing.tokenDecimals}`);
                                             console.log('\x1b[33m%s\x1b[0m', `  Payment details: ${JSON.stringify(paymentDetails, null, 2)}`);
                                         } else if (toolConfig.payment) {
@@ -830,7 +830,7 @@ async function processPayment(params: {
                 const currency = activePricing?.currency || paymentRequirement.asset;
                 const tokenDecimals = activePricing?.tokenDecimals || 6; // Default to USDC decimals if no pricing data
                 // Use original priceRaw from pricing table for database accuracy, fallback to converted amount
-                const amountRaw = activePricing?.priceRaw || paymentRequirement.maxAmountRequired || "0";
+                const amountRaw = activePricing?.amountRaw || paymentRequirement.maxAmountRequired || "0";
 
                 const paymentRecord = await txOperations.createPayment({
                     toolId: ensureString(toolCall.toolId),
@@ -847,7 +847,7 @@ async function processPayment(params: {
                         settleResponse,
                         // Include pricing metadata for reference
                         pricingInfo: activePricing ? {
-                            priceRaw: activePricing.priceRaw,
+                            amountRaw: activePricing.amountRaw,
                             tokenDecimals: activePricing.tokenDecimals,
                             currency: activePricing.currency,
                             network: activePricing.network,
@@ -956,7 +956,7 @@ verbs.forEach(verb => {
                 responseData,
                 // Pass base units amount from pricing metadata if available, otherwise use the amount as-is
                 paymentAmount: toolCall.isPaid ?
-                    (toolCall.payment?._pricingInfo?.priceRaw || toolCall.payment?.maxAmountRequired) :
+                    (toolCall.payment?._pricingInfo?.amountRaw || toolCall.payment?.maxAmountRequired) :
                     undefined,
                 // Pass pricing ID for usage tracking
                 pricingId: toolCall.pricingId,

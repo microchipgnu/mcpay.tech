@@ -1,6 +1,6 @@
 "use client"
 
-import { AddressLink, TransactionLink } from "@/components/custom-ui/explorer-link"
+import { TransactionLink } from "@/components/custom-ui/explorer-link"
 import { ToolExecutionModal } from "@/components/custom-ui/tool-execution-modal"
 import { useTheme } from "@/components/providers/theme-context"
 import { Badge } from "@/components/ui/badge"
@@ -56,6 +56,8 @@ export default function ServerDashboard() {
   const [activeTab, setActiveTab] = useState("overview")
   const [markdownCopied, setMarkdownCopied] = useState(false)
   const { isDark } = useTheme()
+
+  console.log(serverData?.tools.map(tool => tool.payment))
 
   // Initialize tab from URL hash
   useEffect(() => {
@@ -1045,12 +1047,12 @@ await client.connect(transport)`}
                             )}
                           </TableCell>
                           <TableCell>
-                            {(tool.pricing || []).length > 0 && tool.pricing[0] ? (
+                            {(tool?.payment?.pricing || []).length > 0 && tool?.payment?.pricing[0] ? (
                               <TokenDisplay
-                                currency={tool.pricing[0].currency}
-                                network={tool.pricing[0].network}
-                                amount={tool.pricing[0].priceRaw && typeof tool.pricing[0].priceRaw === 'string' && tool.pricing[0].priceRaw.trim() !== ''
-                                  ? fromBaseUnits(tool.pricing[0].priceRaw, tool.pricing[0].tokenDecimals)
+                                currency={tool?.payment?.pricing[0].currency}
+                                network={tool?.payment?.pricing[0].network}
+                                amount={tool?.payment?.pricing[0].amountRaw && typeof tool?.payment?.pricing[0].amountRaw === 'string' && tool?.payment?.pricing[0].amountRaw.trim() !== ''
+                                  ? fromBaseUnits(tool?.payment?.pricing[0].amountRaw, tool?.payment?.pricing[0].tokenDecimals)
                                   : '0'}
                               />
                             ) : (
@@ -1059,9 +1061,9 @@ await client.connect(transport)`}
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-col gap-1">
-                              {(tool.pricing || []).length > 0 && tool.pricing[0]?.network ? (
+                              {(tool?.payment?.pricing || []).length > 0 && tool?.payment?.pricing[0]?.network ? (
                                 <Badge variant="outline" className={`text-xs ${isDark ? "border-gray-500 text-gray-300" : ""}`}>
-                                  {tool.pricing[0].network}
+                                  {tool?.payment?.pricing[0].network}
                                 </Badge>
                               ) : (
                                 <span className={isDark ? "text-gray-400" : "text-gray-500"}>-</span>

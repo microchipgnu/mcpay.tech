@@ -127,6 +127,13 @@
       "when": 1753100215627,
       "tag": "0017_harsh_black_tarantula",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1753290961992,
+      "tag": "0018_careful_zemo",
+      "breakpoints": true
     }
   ]
 }

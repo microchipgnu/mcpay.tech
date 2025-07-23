@@ -128,7 +128,7 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
   
   // Create stable tool reference to avoid infinite loops
   const toolInputSchemaString = useMemo(() => JSON.stringify(tool?.inputSchema), [tool?.inputSchema])
-  const toolPricingString = useMemo(() => JSON.stringify(tool?.pricing), [tool?.pricing])
+  const toolPricingString = useMemo(() => JSON.stringify(tool?.payments), [tool?.payments])
   
   const stableTool = useMemo(() => {
     if (!tool) return null
@@ -150,8 +150,8 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
   // =============================================================================
 
   const getRequiredNetwork = useCallback((): string | null => {
-    if (!stableTool?.isMonetized || !stableTool.pricing.length) return null
-    const selectedPricing = stableTool.pricing[selectedPricingTier] || stableTool.pricing[0]
+    if (!stableTool?.isMonetized || !stableTool.payments.length) return null
+    const selectedPricing = stableTool.payments[selectedPricingTier] || stableTool.payments[0]
     return selectedPricing.network
   }, [stableTool, selectedPricingTier])
 
@@ -173,7 +173,7 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
   }, [getRequiredNetwork, getCurrentNetwork, activeWallet?.walletType])
 
   const shouldShowNetworkStatus = useCallback((): boolean => {
-    if (!tool?.isMonetized || !tool.pricing?.length || !isConnected) {
+    if (!tool?.isMonetized || !tool.payments?.length || !isConnected) {
       return false
     }
     return isOnCorrectNetwork()
@@ -830,7 +830,7 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
   // =============================================================================
 
   const renderPricingSection = () => {
-    if (!stableTool?.isMonetized || !stableTool.pricing.length) {
+    if (!stableTool?.isMonetized || !stableTool.payments.length) {
       return (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
@@ -844,9 +844,9 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
       )
     }
 
-    const selectedPricing = stableTool.pricing[selectedPricingTier] || stableTool.pricing[0]
-    const amount = parseFloat(selectedPricing.priceRaw) / Math.pow(10, selectedPricing.tokenDecimals)
-    const hasMultipleTiers = stableTool.pricing.length > 1
+    const selectedPricing = stableTool.payments[selectedPricingTier] || stableTool.payments[0]
+    const amount = parseFloat(selectedPricing.amountRaw) / Math.pow(10, selectedPricing.tokenDecimals)
+    const hasMultipleTiers = stableTool.payments.length > 1
 
     return (
       <div className="space-y-2">
@@ -870,7 +870,7 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
                     size="sm"
                     className="text-xs"
                   >
-                    {stableTool.pricing.length} Options
+                    {stableTool.payments.length} Options
                     <ChevronDown className="h-3 w-3 ml-1" />
                   </Button>
                 </PopoverTrigger>
@@ -878,8 +878,8 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
                   <div className="p-4">
                     <h5 className="text-sm font-medium mb-3">Select Pricing Tier</h5>
                     <div className="space-y-2">
-                      {stableTool.pricing.map((pricing, index) => {
-                        const tierAmount = parseFloat(pricing.priceRaw) / Math.pow(10, pricing.tokenDecimals)
+                      {stableTool.payments.map((payment, index) => {
+                        const tierAmount = parseFloat(payment.amountRaw) / Math.pow(10, payment.tokenDecimals)
                         return (
                           <div
                             key={index}
@@ -897,9 +897,9 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
                               <div className="space-y-1">
                                                                  <div className="flex items-center gap-2">
                                    <span className="font-medium text-sm">
-                                     {formatCurrency(tierAmount, pricing.currency, pricing.network)}
+                                     {formatCurrency(tierAmount, payment.currency, payment.network)}
                                    </span>
-                                   <span className="text-xs text-gray-500">on {pricing.network}</span>
+                                   <span className="text-xs text-gray-500">on {payment.network}</span>
                                  </div>
                               </div>
                               {selectedPricingTier === index && (
@@ -1030,10 +1030,10 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
   }
 
   const renderPaymentPreview = () => {
-    if (!stableTool?.isMonetized || !stableTool.pricing.length || !isConnected) return null
+    if (!stableTool?.isMonetized || !stableTool.payments.length || !isConnected) return null
     
-    const selectedPricing = stableTool.pricing[selectedPricingTier] || stableTool.pricing[0]
-    const amount = parseFloat(selectedPricing.priceRaw) / Math.pow(10, selectedPricing.tokenDecimals)
+    const selectedPricing = stableTool.payments[selectedPricingTier] || stableTool.payments[0]
+    const amount = parseFloat(selectedPricing.amountRaw) / Math.pow(10, selectedPricing.tokenDecimals)
 
     return (
       <div className="text-center text-sm text-gray-600 dark:text-gray-400 py-2">
@@ -1157,7 +1157,7 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
   }
 
   const renderNetworkSwitchPrompt = () => {
-    if (!stableTool?.isMonetized || !stableTool.pricing.length || !isConnected || isOnCorrectNetwork()) {
+    if (!stableTool?.isMonetized || !stableTool.payments.length || !isConnected || isOnCorrectNetwork()) {
       return null
     }
 

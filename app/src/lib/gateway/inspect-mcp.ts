@@ -76,7 +76,7 @@ export async function getMcpToolsWithPayments(url: string, userWalletAddress: st
     return toolsResult.tools.map((tool) => {
       // Extract payment information from annotations
       const paymentInfo = extractPaymentFromAnnotations(tool.annotations, userWalletAddress)
-      
+
       return {
         name: tool.name,
         description: tool.description,

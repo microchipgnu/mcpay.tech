@@ -45,7 +45,7 @@ import {
     serverSummaryAnalyticsView,
     session,
     toolAnalyticsView,
-    toolPricing,
+    // toolPricing table removed - using enhanced pricing operations instead
     toolUsage,
     users,
     userWallets,
@@ -55,6 +55,7 @@ import {
 } from "@/lib/gateway/db/schema";
 import { and, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
 import { ToolPaymentInfo } from '@/types/mcp';
+import { PaymentInfo, PricingEntry } from '@/types/payments';
 import { type CDPNetwork } from '@/types/wallet';
 
 // Define proper transaction type
@@ -192,13 +193,22 @@ export const txOperations = {
             const existingTool = existingTools.find(t => t.name === toolData.name);
             
             if (existingTool) {
-                // Update existing tool
+                // Update existing tool - PRESERVE EXISTING PRICING DATA
+                const existingPayment = (existingTool.payment as any) || {};
+                
+                // Merge payment data while preserving existing pricing
+                const mergedPayment = toolData.payment ? {
+                    ...toolData.payment,
+                    // Preserve existing pricing data if it exists
+                    ...(existingPayment.pricing && { pricing: existingPayment.pricing })
+                } : existingPayment;
+                
                 const updatedTool = await tx.update(mcpTools)
                     .set({
                         description: toolData.description,
                         inputSchema: toolData.inputSchema,
-                        isMonetized: !!toolData.payment,
-                        payment: toolData.payment,
+                        isMonetized: !!toolData.payment || !!(existingPayment.pricing?.length > 0),
+                        payment: mergedPayment,
                         updatedAt: new Date()
                     })
                     .where(eq(mcpTools.id, existingTool.id))
@@ -349,19 +359,7 @@ export const txOperations = {
                         updatedAt: true
                     },
                     with: {
-                        pricing: {
-                            where: eq(toolPricing.active, true),
-                            columns: {
-                                id: true,
-                                priceRaw: true,
-                                tokenDecimals: true,
-                                currency: true,
-                                network: true,
-                                assetAddress: true,
-                                active: true,
-                                createdAt: true
-                            }
-                        },
+                        // pricing relation removed - pricing data now in payment jsonb field
                         payments: {
                             columns: {
                                 id: true,
@@ -1017,9 +1015,32 @@ export const txOperations = {
         status?: string;
         metadata?: Record<string, unknown>;
     }) => async (tx: TransactionType) => {
+        // Get existing tool to preserve pricing data
+        const existingTool = await tx.query.mcpTools.findFirst({
+            where: eq(mcpTools.id, toolId)
+        });
+
+        if (!existingTool) {
+            throw new Error(`Tool with ID ${toolId} not found`);
+        }
+
+        // Preserve existing pricing data when updating payment field
+        const existingPayment = (existingTool.payment as any) || {};
+        const mergedPayment = data.payment ? {
+            ...data.payment,
+            // Preserve existing pricing data if it exists
+            ...(existingPayment.pricing && { pricing: existingPayment.pricing })
+        } : existingPayment;
+
         const tool = await tx.update(mcpTools)
             .set({
-                ...data,
+                name: data.name,
+                description: data.description,
+                inputSchema: data.inputSchema,
+                isMonetized: data.isMonetized !== undefined ? data.isMonetized : !!(existingPayment.pricing?.length > 0),
+                payment: data.payment !== undefined ? mergedPayment : existingPayment,
+                status: data.status,
+                metadata: data.metadata,
                 updatedAt: new Date()
             })
             .where(eq(mcpTools.id, toolId))
@@ -1829,54 +1850,166 @@ export const txOperations = {
         return result[0];
     },
 
-    // Tool Pricing
+    // Enhanced Tool Pricing (now stored in mcpTools.payment field)
     createToolPricing: (toolId: string, data: {
-        priceRaw: string; // Base units as string (e.g., "100000" for 0.1 USDC)
+        amountRaw: string; // Base units as string (e.g., "100000" for 0.1 USDC)
         tokenDecimals: number; // Token decimals (e.g., 6 for USDC)
         currency: string;
         network: string;
         assetAddress?: string;
     }) => async (tx: TransactionType) => {
-        const pricing = await tx.insert(toolPricing).values({
-            toolId,
-            priceRaw: data.priceRaw,
+        // Get current tool data
+        const tool = await tx.query.mcpTools.findFirst({
+            where: eq(mcpTools.id, toolId)
+        });
+        
+        if (!tool) {
+            throw new Error(`Tool with ID ${toolId} not found`);
+        }
+
+        const currentPayment = (tool.payment as PaymentInfo) || {};
+        const currentPricing = currentPayment.pricing || [];
+        
+        // Deactivate existing pricing entries
+        const updatedPricing = currentPricing.map((p: PricingEntry) => ({ ...p, active: false, updatedAt: new Date().toISOString() }));
+        
+        // Create new pricing entry
+        const newPricing = {
+            id: crypto.randomUUID(),
+            amountRaw: data.amountRaw,
             tokenDecimals: data.tokenDecimals,
             currency: data.currency,
             network: data.network,
-            assetAddress: data.assetAddress,
+            assetAddress: data.assetAddress || null,
             active: true,
-            createdAt: new Date(),
-            updatedAt: new Date()
-        }).returning();
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
 
-        if (!pricing[0]) throw new Error("Failed to create pricing");
-        return pricing[0];
+        // Add new pricing to the array
+        updatedPricing.push(newPricing);
+
+        // Update tool with enhanced payment data
+        const enhancedPayment = {
+            ...currentPayment,
+            pricing: updatedPricing
+        };
+
+        const result = await tx
+            .update(mcpTools)
+            .set({ 
+                payment: enhancedPayment,
+                isMonetized: true,
+                updatedAt: new Date()
+            })
+            .where(eq(mcpTools.id, toolId))
+            .returning();
+
+        if (!result[0]) {
+            throw new Error("Failed to update tool with pricing");
+        }
+
+        // Return pricing in the same format as the old table
+        return {
+            id: newPricing.id,
+            toolId,
+            amountRaw: newPricing.amountRaw,
+            tokenDecimals: newPricing.tokenDecimals,
+            currency: newPricing.currency,
+            network: newPricing.network,
+            assetAddress: newPricing.assetAddress,
+            active: newPricing.active,
+            createdAt: new Date(newPricing.createdAt),
+            updatedAt: new Date(newPricing.updatedAt)
+        };
     },
 
     getActiveToolPricing: (toolId: string) => async (tx: TransactionType) => {
-        return await tx.query.toolPricing.findFirst({
-            where: and(
-                eq(toolPricing.toolId, toolId),
-                eq(toolPricing.active, true)
-            )
+        const tool = await tx.query.mcpTools.findFirst({
+            where: eq(mcpTools.id, toolId)
         });
+        
+        if (!tool?.payment) {
+            return null;
+        }
+        
+        const payment = tool.payment as PaymentInfo;
+        const activePricing = payment.pricing?.find((p: PricingEntry) => p.active === true);
+        
+        if (!activePricing) {
+            return null;
+        }
+
+        // Return in the same format as the old table
+        return {
+            id: activePricing.id,
+            toolId,
+            amountRaw: activePricing.amountRaw,
+            tokenDecimals: activePricing.tokenDecimals,
+            currency: activePricing.currency,
+            network: activePricing.network,
+            assetAddress: activePricing.assetAddress,
+            active: activePricing.active,
+            createdAt: new Date(activePricing.createdAt),
+            updatedAt: new Date(activePricing.updatedAt)
+        };
     },
 
     deactivateToolPricing: (toolId: string) => async (tx: TransactionType) => {
-        const currentPricing = await tx.query.toolPricing.findFirst({
-            where: and(
-                eq(toolPricing.toolId, toolId),
-                eq(toolPricing.active, true)
-            )
+        const tool = await tx.query.mcpTools.findFirst({
+            where: eq(mcpTools.id, toolId)
         });
-
-        if (currentPricing) {
-            await tx.update(toolPricing)
-                .set({ active: false, updatedAt: new Date() })
-                .where(eq(toolPricing.id, currentPricing.id));
-            return currentPricing;
+        
+        if (!tool?.payment) {
+            return null;
         }
-        return null;
+        
+        const payment = tool.payment as PaymentInfo;
+        
+        if (!payment.pricing) {
+            return null;
+        }
+        
+        const currentActive = payment.pricing.find((p: PricingEntry) => p.active === true);
+        
+        if (!currentActive) {
+            return null;
+        }
+        
+        // Deactivate current pricing
+        const updatedPricing = payment.pricing.map((p: PricingEntry) => 
+            p.id === currentActive.id 
+                ? { ...p, active: false, updatedAt: new Date().toISOString() }
+                : p
+        );
+
+        const updatedPayment = {
+            ...payment,
+            pricing: updatedPricing
+        };
+
+        await tx
+            .update(mcpTools)
+            .set({ 
+                payment: updatedPayment,
+                isMonetized: false,
+                updatedAt: new Date()
+            })
+            .where(eq(mcpTools.id, toolId));
+
+        // Return the deactivated pricing in the same format
+        return {
+            id: currentActive.id,
+            toolId,
+            amountRaw: currentActive.amountRaw,
+            tokenDecimals: currentActive.tokenDecimals,
+            currency: currentActive.currency,
+            network: currentActive.network,
+            assetAddress: currentActive.assetAddress,
+            active: false,
+            createdAt: new Date(currentActive.createdAt),
+            updatedAt: new Date()
+        };
     },
 
     // Payments
@@ -2091,16 +2224,8 @@ export const txOperations = {
                             }
                         }
                     }
-                },
-                pricing: {
-                    columns: {
-                        id: true,
-                        priceRaw: true,
-                        tokenDecimals: true,
-                        currency: true,
-                        network: true
-                    }
                 }
+                // pricing relation removed - pricing data now in payment jsonb field
             }
         });
     },
@@ -2873,19 +2998,7 @@ export const txOperations = {
                         updatedAt: true
                     },
                     with: {
-                        pricing: {
-                            where: eq(toolPricing.active, true),
-                            columns: {
-                                id: true,
-                                priceRaw: true,
-                                tokenDecimals: true,
-                                currency: true,
-                                network: true,
-                                assetAddress: true,
-                                active: true,
-                                createdAt: true
-                            }
-                        },
+                        // pricing relation removed - pricing data now in payment jsonb field
                         payments: {
                             columns: {
                                 id: true,
@@ -3189,7 +3302,7 @@ export const txOperations = {
                 await txOperations.createToolPricing(
                     createdTool.id,
                     {
-                        priceRaw: String(paymentInfo.maxAmountRequired || 0),
+                        amountRaw: String(paymentInfo.maxAmountRequired || 0),
                         tokenDecimals,
                         currency,
                         network: String(paymentInfo.network || 'base-sepolia'),

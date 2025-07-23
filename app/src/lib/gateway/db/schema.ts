@@ -16,7 +16,7 @@
  * - formatAmount(baseUnits, decimals, options) -> displayString
  * 
  * Tables with amount_raw + token_decimals:
- * - toolPricing (price_raw, token_decimals)
+ * - mcpTools.payment.pricing (price_raw, token_decimals) - stored in jsonb field
  * - payments (amount_raw, token_decimals)
  * - analytics (total_revenue_raw, uses mixed currencies - handle in app layer)
  * 
@@ -195,29 +195,13 @@ export const mcpTools = pgTable('mcp_tools', {
   index('mcp_tool_monetized_idx').on(table.isMonetized),
 ]);
 
-export const toolPricing = pgTable('tool_pricing', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  toolId: uuid('tool_id').references(() => mcpTools.id, { onDelete: 'cascade' }).notNull(),
-  priceRaw: decimal('price_raw', { precision: 38, scale: 0 }).notNull(), // Base units as NUMERIC(38,0)
-  tokenDecimals: integer('token_decimals').notNull(), // Token decimals for self-sufficient records
-  currency: text('currency').notNull(), // Token symbol or contract address
-  network: text('network').notNull(),
-  assetAddress: text('asset_address'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-  active: boolean('active').default(true).notNull(),
-}, (table) => [
-  index('tool_pricing_tool_id_idx').on(table.toolId),
-  index('tool_pricing_active_idx').on(table.active),
-  index('tool_pricing_network_idx').on(table.network),
-  index('tool_pricing_tool_network_idx').on(table.toolId, table.network),
-  check('price_raw_positive_check', sql`"price_raw" >= 0`), // Can validate numeric values
-]);
+// toolPricing table removed - pricing data now stored in mcpTools.payment jsonb field
+// A backward-compatible view is created in the migration to maintain existing queries
 
 export const toolUsage = pgTable('tool_usage', {
   id: uuid('id').primaryKey().defaultRandom(),
   toolId: uuid('tool_id').references(() => mcpTools.id, { onDelete: 'cascade' }).notNull(),
-  pricingId: uuid('pricing_id').references(() => toolPricing.id, { onDelete: 'set null' }), // Direct reference to pricing used
+  pricingId: text('pricing_id'), // Now stores pricing UUID from payment field (no foreign key)
   timestamp: timestamp('timestamp').defaultNow().notNull(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
   requestData: jsonb('request_data'),
@@ -381,7 +365,7 @@ export const mcpToolsRelations = relations(mcpTools, ({ one, many }) => ({
     fields: [mcpTools.serverId],
     references: [mcpServers.id],
   }),
-  pricing: many(toolPricing),
+  // pricing relation removed - pricing data now stored in payment jsonb field
   usage: many(toolUsage),
   payments: many(payments),
   proofs: many(proofs),
@@ -428,23 +412,14 @@ export const accountRelations = relations(account, ({ one }) => ({
   }),
 }));
 
-export const toolPricingRelations = relations(toolPricing, ({ one, many }) => ({
-  tool: one(mcpTools, {
-    fields: [toolPricing.toolId],
-    references: [mcpTools.id],
-  }),
-  usage: many(toolUsage), // One pricing can be used by many tool usages
-}));
+// toolPricingRelations removed - pricing data now stored in mcpTools.payment jsonb field
 
 export const toolUsageRelations = relations(toolUsage, ({ one }) => ({
   tool: one(mcpTools, {
     fields: [toolUsage.toolId],
     references: [mcpTools.id],
   }),
-  pricing: one(toolPricing, {
-    fields: [toolUsage.pricingId],
-    references: [toolPricing.id],
-  }),
+  // pricing relation removed - pricingId now stores UUID string from payment field (no foreign key)
   user: one(users, {
     fields: [toolUsage.userId],
     references: [users.id],
