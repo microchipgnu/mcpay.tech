@@ -12,7 +12,7 @@ import type { txOperations } from '@/lib/gateway/db/actions';
 // =============================================================================
 
 // Helper type to extract the first parameter of a function
-type FirstParameter<T> = T extends (arg: infer P) => any ? P : never;
+type FirstParameter<T> = T extends (arg: infer P) => unknown ? P : never;
 
 // Helper type to extract input type from txOperations method
 type TxOperationInput<T extends keyof typeof txOperations> = 

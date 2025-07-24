@@ -10,13 +10,13 @@
  */
 
 import { fromBaseUnits } from "@/lib/commons";
-import { extractApiKeyFromHeaders, hashApiKey } from "@/lib/gateway/auth-utils";
 import { auth } from "@/lib/gateway/auth";
+import { extractApiKeyFromHeaders, hashApiKey } from "@/lib/gateway/auth-utils";
 import { txOperations, withTransaction } from "@/lib/gateway/db/actions";
 import { attemptAutoSign } from "@/lib/gateway/payment-strategies";
 import { createExactPaymentRequirements, decodePayment, settle, verifyPayment, x402Version } from "@/lib/gateway/payments";
 import { PricingEntry, type AuthType, type MCPTool, type ToolCall, type UserWithWallet } from "@/types";
-import { ExtendedPaymentRequirements, settleResponseHeader, SupportedNetwork } from "@/types/x402";
+import { settleResponseHeader, SupportedNetwork } from "@/types/x402";
 import { Hono, type Context } from "hono";
 import { handle } from "hono/vercel";
 
@@ -513,9 +513,6 @@ async function recordAnalytics(params: {
             },
             result: responseData
         })(tx);
-
-        // Update daily analytics using internal server ID
-        const today = new Date();
 
         // Calculate converted revenue amount if payment was made
         let convertedRevenue: number | undefined = undefined;

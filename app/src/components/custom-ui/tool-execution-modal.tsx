@@ -266,53 +266,6 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
     return `${num.toFixed(6)} ${currency}`
   }, [])
 
-  // Enhanced token display with verification badge
-  const TokenDisplay = ({
-    currency,
-    network,
-    amount
-  }: {
-    currency: string
-    network: string
-    amount?: string | number
-  }) => {
-    const tokenInfo = getTokenInfo(currency, network as Network)
-
-    return (
-      <div className="flex items-center gap-2">
-        {/* Token Logo */}
-        {tokenInfo?.logoUri && (
-          <div className="w-4 h-4 rounded-full overflow-hidden">
-            <Image
-              src={tokenInfo.logoUri}
-              alt={tokenInfo.symbol}
-              width={16}
-              height={16}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
-
-        {/* Amount and Symbol */}
-        <div className="flex items-center gap-1">
-          {amount && (
-            <span className="font-medium">
-              {formatCurrency(amount, currency, network)}
-            </span>
-          )}
-          {!amount && tokenInfo && (
-            <span className="font-medium">{tokenInfo.symbol}</span>
-          )}
-          {!amount && !tokenInfo && (
-            <span className="font-mono text-xs">
-              {currency.startsWith('0x') ? `${currency.slice(0, 6)}...` : currency}
-            </span>
-          )}
-        </div>
-      </div>
-    )
-  }
-
   // =============================================================================
   // MOBILE DETECTION
   // =============================================================================

@@ -1,7 +1,6 @@
 import { txOperations } from "@/lib/gateway/db/actions";
 import { mcpTools } from "@/lib/gateway/db/schema";
 import { experimental_createMCPClient } from "ai";
-import { PricingEntry } from "./payments";
 
 export type McpServerList = Awaited<ReturnType<ReturnType<typeof txOperations.listMcpServers>>>;
 export type McpServerWithRelations = McpServerList[number];

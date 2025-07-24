@@ -16,16 +16,8 @@ import { getMcpTools } from "@/lib/gateway/inspect-mcp";
 import { AppContext, CDPNetwork, CDPWalletMetadata, ExecutionHeaders, McpServerWithActivity, McpServerWithRelations, type CreateCDPWalletOptions } from "@/types";
 import { type AuthType } from "@/types/auth";
 import { type BlockchainArchitecture } from "@/types/blockchain";
-import { 
-  CreateServerForAuthenticatedUserInput,
-  CreateUserInput,
-  CreateToolInput,
-  CreatePaymentInput,
-  RecordToolUsageInput,
-  AddWalletToUserInput,
-  CreateApiKeyInput,
-  GetTxOperationInput,
-  TxOperationMethods
+import {
+    CreateServerForAuthenticatedUserInput
 } from "@/types/database-actions";
 import { Hono, type Context, type Next } from "hono";
 import { handle } from "hono/vercel";

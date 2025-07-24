@@ -24,7 +24,6 @@
 
 import {
     addRevenueToCurrency,
-    COMMON_DECIMALS,
     formatRevenueByCurrency,
     fromBaseUnits, getBlockchainArchitecture
 } from '@/lib/commons';
@@ -87,6 +86,7 @@ function processRevenueDetails(revenueDetails: RevenueDetails): { revenueByCurre
             } catch (error) {
                 // If conversion fails, add raw amount (not ideal but prevents errors)
                 totalRevenue += parseFloat(detail.amount_raw) || 0;
+                console.error('Error converting revenue amount:', error);
             }
         }
     });
@@ -200,13 +200,7 @@ export const txOperations = {
                 
                 if (toolData.pricing && toolData.pricing.length > 0) {
                     // For each new pricing entry, invalidate older entries with same network + assetAddress
-                    for (const newPricing of toolData.pricing) {
-                        // Find existing entries with same network and assetAddress
-                        const conflictingEntries = mergedPricing.filter(existing => 
-                            existing.network === newPricing.network && 
-                            existing.assetAddress === newPricing.assetAddress
-                        );
-                        
+                    for (const newPricing of toolData.pricing) {                        
                         // Deactivate conflicting entries (older ones)
                         mergedPricing = mergedPricing.map(existing => {
                             if (existing.network === newPricing.network && 

@@ -176,7 +176,7 @@ export function extractPaymentFromAnnotations(annotations: unknown, userWalletAd
       const tokenSymbol = paymentOption.tokenSymbol || paymentOption.currency || 'USDC'
       const network = (paymentOption.network || 'base-sepolia') as UnifiedNetwork
       const rawAmount = String(paymentOption.rawAmount || 0)
-      const recipient = paymentOption.recipient || userWalletAddress
+      // const recipient = paymentOption.recipient || userWalletAddress
 
       // Validate the rawAmount is a valid base unit amount
       if (!/^\d+$/.test(rawAmount)) {
@@ -220,12 +220,6 @@ function isSimplePaymentOption(option: unknown): option is SimplePaymentOption {
 
 function isAdvancedPaymentOption(option: unknown): option is AdvancedPaymentOption {
   return typeof option === 'object' && option !== null && 'rawAmount' in option && (option as Record<string, unknown>).rawAmount !== undefined
-}
-
-function isLegacyPaymentOption(option: unknown): option is LegacyPaymentOption {
-  if (typeof option !== 'object' || option === null) return false
-  const obj = option as Record<string, unknown>
-  return ('asset' in obj || 'maxAmountRequired' in obj) && !('price' in obj) && !('rawAmount' in obj)
 }
 
 /**

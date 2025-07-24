@@ -6,6 +6,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAuthMiddleware } from "better-auth/api";
 import { randomUUID } from "crypto";
 import { txOperations, withTransaction } from "@/lib/gateway/db/actions";
+import { CDPWalletMetadata } from "@/types";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -109,7 +110,7 @@ export const auth = betterAuth({
               hasSmartAccount: !!result.cdpResult.smartAccount,
               primaryWallet: result.wallets.find(w => w.isPrimary)?.walletAddress,
               smartWallet: result.wallets.find(w => {
-                const metadata = w.walletMetadata as any;
+                const metadata = w.walletMetadata as CDPWalletMetadata;
                 return metadata?.isSmartAccount;
               })?.walletAddress
             });

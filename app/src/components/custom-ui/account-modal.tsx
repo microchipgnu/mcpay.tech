@@ -5,6 +5,7 @@ import { useTheme } from "@/components/providers/theme-context"
 import { useUser, useUserWallets, useWalletBalances } from "@/components/providers/user"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import {
   Dialog,
@@ -16,15 +17,13 @@ import {
   DrawerContent,
   DrawerHeader
 } from "@/components/ui/drawer"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { signIn, signOut, useSession } from "@/lib/client/auth"
 import { openExplorer } from "@/lib/client/blockscout"
 import { api } from "@/lib/client/utils"
-import { AccountModalProps, BalancesByChain, ChainBalance } from "@/types/ui"
 import { ApiKey } from "@/types/mcp"
+import { AccountModalProps, BalancesByChain, ChainBalance } from "@/types/ui"
 import {
   AlertCircle,
   CheckCircle,
@@ -36,6 +35,7 @@ import {
   DollarSign,
   ExternalLink,
   Github,
+  Loader2,
   LogOut,
   Plus,
   Settings,
@@ -43,11 +43,10 @@ import {
   Trash2,
   TrendingUp,
   User,
-  Wallet,
-  Loader2
+  Wallet
 } from "lucide-react"
 import Image from "next/image"
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { useAccount, useDisconnect } from "wagmi"
 

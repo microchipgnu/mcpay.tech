@@ -17,41 +17,22 @@
 // =============================================================================
 
 export {
+
+  // Arithmetic operations
+  addAmounts, addRevenueToCurrency, aggregateDbAmounts,
+  // Error class
+  AmountConversionError, compareAmounts,
+  // Multi-currency revenue operations
+  createCurrencyKey, formatAmount, formatDbAmount, formatRevenueByCurrency, fromBaseUnits, fromDbAmount, getRevenueByCurrency,
+  hasRevenue, isZeroAmount, mergeRevenueByCurrency, parseCurrencyKey,
+  // User input parsing
+  parseUserAmount, subtractAmounts,
   // Core conversion functions
   toBaseUnits,
-  fromBaseUnits,
-  formatAmount,
-  
-  // Arithmetic operations
-  addAmounts,
-  subtractAmounts,
-  compareAmounts,
-  isZeroAmount,
-  
-  // User input parsing
-  parseUserAmount,
-  
-  // Validation
-  validateBaseAmount,
-  
   // Database integration
   toDbAmount,
-  fromDbAmount,
-  formatDbAmount,
-  validateDbAmount,
-  aggregateDbAmounts,
-  
-  // Multi-currency revenue operations
-  createCurrencyKey,
-  parseCurrencyKey,
-  addRevenueToCurrency,
-  mergeRevenueByCurrency,
-  formatRevenueByCurrency,
-  getRevenueByCurrency,
-  hasRevenue,
-  
-  // Error class
-  AmountConversionError,
+  // Validation
+  validateBaseAmount, validateDbAmount
 } from './amounts';
 
 // =============================================================================
@@ -59,54 +40,26 @@ export {
 // =============================================================================
 
 export {
-  // Core unified network types and data
-  type UnifiedNetwork,
-  type NetworkConfig,
-  type TokenConfig,
-  UNIFIED_NETWORKS,
-  
-  // Network configuration functions
-  getNetworkConfig,
-  getTokenConfig,
-  getNetworkTokens,
-  getNetworkStablecoins,
-  getSupportedNetworks,
-  
-  // Network filtering functions
-  getEVMNetworks,
-  getSolanaNetworks,
-  getNearNetworks,
-  getMainnetNetworks,
-  getTestnetNetworks,
-  
-  // Network validation and utilities
-  isNetworkSupported,
-  isTestnetNetwork,
-  getNetworkByChainId,
-  
-  // CDP and payment network utilities
-  getX402Networks,
-  getCDPNetworks,
-  getFacilitatorUrl,
-  getCDPNetworkName,
-  getUSDCAddress,
-  
-  // Legacy compatibility
-  LEGACY_NETWORK_MAPPING,
-  normalizeLegacyNetwork,
-  toX402Network,
-  fromX402Network,
-  
-  // Chain ID mappings
-  CHAIN_ID_TO_NETWORK,
-  NETWORK_TO_CHAIN_ID,
-  
+
   // Architecture utilities (from unified networks system)
   BLOCKCHAIN_TO_ARCHITECTURE,
-  getBlockchainArchitecture,
-  getBlockchainsForArchitecture,
-  isSupportedBlockchain,
-  getNativeTokenSymbol,
+  // Chain ID mappings
+  CHAIN_ID_TO_NETWORK, fromX402Network, getBlockchainArchitecture,
+  getBlockchainsForArchitecture, getCDPNetworkName, getCDPNetworks,
+  // Network filtering functions
+  getEVMNetworks, getFacilitatorUrl, getMainnetNetworks, getNativeTokenSymbol, getNearNetworks, getNetworkByChainId,
+  // Network configuration functions
+  getNetworkConfig, getNetworkStablecoins, getNetworkTokens, getSolanaNetworks, getSupportedNetworks, getTestnetNetworks, getTokenConfig, getUSDCAddress,
+  // CDP and payment network utilities
+  getX402Networks,
+  // Network validation and utilities
+  isNetworkSupported, isSupportedBlockchain, isTestnetNetwork,
+  // Legacy compatibility
+  LEGACY_NETWORK_MAPPING, NETWORK_TO_CHAIN_ID, normalizeLegacyNetwork,
+  toX402Network, UNIFIED_NETWORKS, type NetworkConfig,
+  type TokenConfig,
+  // Core unified network types and data
+  type UnifiedNetwork
 } from './networks';
 
 // =============================================================================
@@ -114,13 +67,11 @@ export {
 // =============================================================================
 
 export {
-  // Balance checking functions
-  type StablecoinClient,
-  getStablecoinBalanceOnChain,
+  getMainnetStablecoinBalances, getStablecoinBalanceOnChain,
   getStablecoinBalances,
-  getStablecoinBalancesOnChains,
-  getMainnetStablecoinBalances,
-  getTestnetStablecoinBalances,
+  getStablecoinBalancesOnChains, getTestnetStablecoinBalances,
+  // Balance checking functions
+  type StablecoinClient
 } from './balance-tracker';
 
 // =============================================================================
@@ -136,34 +87,21 @@ export {
 // =============================================================================
 
 export {
-  // Legacy token registry
-  TOKEN_REGISTRY,
-  NETWORKS,
-  
+
+  // Token formatting
+  formatTokenAmount,
+
+  // Address utilities
+  getNativeTokenAddress, getNetworkByChainId as getNetworkByChainIdLegacy,
+  // Network utilities (legacy)
+  getNetworkInfo, getPopularTokens, getRecommendedPaymentTokens,
+  getStablecoins,
   // Search and lookup functions
   getTokenInfo,
   getTokenInfoByAddress,
-  getTokensByNetwork,
-  getVerifiedTokens,
-  getRecommendedPaymentTokens,
-  getStablecoins,
-  getTokensBySymbol,
-  searchTokensByName,
-  
-  // Network utilities (legacy)
-  getNetworkInfo,
-  getNetworkByChainId as getNetworkByChainIdLegacy,
-  isValidToken,
-  
-  // Token formatting
-  formatTokenAmount,
-  
-  // Address utilities
-  getNativeTokenAddress,
-  isNativeToken,
-  getPopularTokens,
-  isValidTokenAddress,
-  getTokenVerification,
+  getTokensByNetwork, getTokensBySymbol, getTokenVerification, getVerifiedTokens, isNativeToken, isValidToken, isValidTokenAddress, NETWORKS, searchTokensByName,
+  // Legacy token registry
+  TOKEN_REGISTRY
 } from './tokens';
 
 // =============================================================================
@@ -182,24 +120,20 @@ export { COMMON_DECIMALS } from '@/types/blockchain';
 
 // Amount operations (most common)
 export {
-  toBaseUnits as convertToBaseUnits,
-  fromBaseUnits as convertFromBaseUnits,
-  formatAmount as formatTokenValue,
+  fromBaseUnits as convertFromBaseUnits, toBaseUnits as convertToBaseUnits, formatAmount as formatTokenValue
 } from './amounts';
 
 // Network operations (most common) - use unified system
 export {
   getNetworkConfig as findNetwork,
-  getNetworkStablecoins as findStablecoins,
-  isTestnetNetwork as isTestnet,
-  getEVMNetworks as getEvmNetworks,
+  getNetworkStablecoins as findStablecoins, getEVMNetworks as getEvmNetworks, isTestnetNetwork as isTestnet
 } from './networks';
 
 // Balance tracking (most common)
 export {
   getStablecoinBalances as checkBalances,
   getMainnetStablecoinBalances as checkMainnetBalances,
-  getTestnetStablecoinBalances as checkTestnetBalances,
+  getTestnetStablecoinBalances as checkTestnetBalances
 } from './balance-tracker';
 
 // =============================================================================
@@ -209,29 +143,28 @@ export {
 // Import the specific functions we need for utility functions
 import type { Network } from '@/types/blockchain';
 import { COMMON_DECIMALS } from '@/types/blockchain';
-import { 
-  toBaseUnits,
-  fromBaseUnits,
+import {
   formatAmount,
+  fromBaseUnits,
+  toBaseUnits,
   validateBaseAmount
 } from './amounts';
-import { 
-  getTokenInfo, 
-  getNetworkInfo, 
-  getSupportedNetworks, 
-  getRecommendedPaymentTokens, 
-  getStablecoins,
-  formatTokenAmount,
-  TOKEN_REGISTRY,
-  NETWORKS,
-  isValidToken
-} from './tokens';
 import {
   getNetworkConfig,
-  type UnifiedNetwork,
   isNetworkSupported as isUnifiedNetworkSupported,
   UNIFIED_NETWORKS
 } from './networks';
+import {
+  formatTokenAmount,
+  getNetworkInfo,
+  getRecommendedPaymentTokens,
+  getStablecoins,
+  getSupportedNetworks,
+  getTokenInfo,
+  isValidToken,
+  NETWORKS,
+  TOKEN_REGISTRY
+} from './tokens';
 
 
 /**
@@ -310,10 +243,10 @@ import * as Amounts from './amounts';
 import * as Networks from './networks';
 import * as Tokens from './tokens';
 
-import * as BalanceTracker from './balance-tracker';
 import * as Types from '@/types/blockchain';
+import * as BalanceTracker from './balance-tracker';
 
-export { Amounts, Networks, Tokens, BalanceTracker, Types };
+export { Amounts, BalanceTracker, Networks, Tokens, Types };
 
 // =============================================================================
 // DEFAULT EXPORT

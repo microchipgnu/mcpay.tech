@@ -49,7 +49,7 @@ export const NETWORKS: Record<Network, NetworkInfo> = Object.fromEntries(
 /**
  * Convert unified TokenConfig to legacy TokenInfo format
  */
-function convertToTokenInfo(tokenConfig: TokenConfig, network: Network, tokenId: string): TokenInfo {
+function convertToTokenInfo(tokenConfig: TokenConfig, network: Network): TokenInfo {
   const networkConfig = getNetworkConfig(network);
   if (!networkConfig) {
     throw new Error(`Network configuration not found for ${network}`);
@@ -96,7 +96,7 @@ export const TOKEN_REGISTRY: Record<Network, Record<string, TokenInfo>> = Object
     const tokens = getNetworkTokens(network);
     const tokenEntries = Object.entries(UNIFIED_NETWORKS[network].tokens).map(([tokenId, tokenConfig]) => {
       try {
-        const tokenInfo = convertToTokenInfo(tokenConfig, network, tokenId);
+        const tokenInfo = convertToTokenInfo(tokenConfig, network);
         return [tokenId.toLowerCase(), tokenInfo];
       } catch (error) {
         console.warn(`Failed to convert token ${tokenId} on ${network}:`, error);

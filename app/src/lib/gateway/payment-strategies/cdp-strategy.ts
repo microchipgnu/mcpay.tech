@@ -209,7 +209,7 @@ export class CDPSigningStrategy implements PaymentSigningStrategy {
     }
 
     private getViemChain(network: CDPNetwork) {
-        const networkConfig = getNetworkConfig(network);
+        // const networkConfig = getNetworkConfig(network);
         
         // Return appropriate viem chain based on network
         switch (network) {
