@@ -1,3 +1,4 @@
+import { PricingEntry } from "@/types"
 import { type ApiError } from "@/types/api"
 import { DailyServerAnalytics, McpServerWithStats, ServerCreateData, ServerRegistrationData, ServerSummaryAnalytics } from "@/types/mcp"
 import { clsx, type ClassValue } from "clsx"
@@ -175,14 +176,7 @@ export const api = {
     authHeaders?: Record<string, unknown>
     tools?: Array<{
       name: string
-      payment?: {
-        maxAmountRequired: string
-        asset: string
-        network: string
-        resource?: string
-        description?: string
-        payTo?: string;
-      }
+      pricing?: PricingEntry[]
     }>
     metadata?: Record<string, unknown>
   }): Promise<ServerCreateData> => {

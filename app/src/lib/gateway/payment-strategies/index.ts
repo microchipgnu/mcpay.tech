@@ -16,12 +16,11 @@
  * - Graceful fallback between strategies
  */
 
-import type { Context } from "hono";
-import { txOperations, withTransaction } from "@/lib/gateway/db/actions";
-import { createExactPaymentRequirements } from "@/lib/gateway/payments";
-import type { ExtendedPaymentRequirements, SupportedNetwork } from "@/types/x402";
 import { CDPSigningStrategy } from "@/lib/gateway/payment-strategies/cdp-strategy";
 import { getConfig, type PaymentStrategyConfig } from "@/lib/gateway/payment-strategies/config";
+import { createExactPaymentRequirements } from "@/lib/gateway/payments";
+import type { ExtendedPaymentRequirements, SupportedNetwork } from "@/types/x402";
+import type { Context } from "hono";
 
 
 // Type definitions

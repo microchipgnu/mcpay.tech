@@ -16,7 +16,7 @@
  * - formatAmount(baseUnits, decimals, options) -> displayString
  * 
  * Tables with amount_raw + token_decimals:
- * - mcpTools.payment.pricing (price_raw, token_decimals) - stored in jsonb field
+ * - mcpTools.pricing (price_raw, token_decimals) - stored in jsonb field
  * - payments (amount_raw, token_decimals)
  * - analytics (total_revenue_raw, uses mixed currencies - handle in app layer)
  * 
@@ -181,8 +181,9 @@ export const mcpTools = pgTable('mcp_tools', {
   name: text('name').notNull(),
   description: text('description').notNull(),
   inputSchema: jsonb('input_schema').notNull(),
+  outputSchema: jsonb('output_schema').default(sql`'{}'::jsonb`),
   isMonetized: boolean('is_monetized').default(false).notNull(),
-  payment: jsonb('payment'),
+  pricing: jsonb('pricing'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
   status: text('status').default('active').notNull(),
@@ -195,13 +196,9 @@ export const mcpTools = pgTable('mcp_tools', {
   index('mcp_tool_monetized_idx').on(table.isMonetized),
 ]);
 
-// toolPricing table removed - pricing data now stored in mcpTools.payment jsonb field
-// A backward-compatible view is created in the migration to maintain existing queries
-
 export const toolUsage = pgTable('tool_usage', {
   id: uuid('id').primaryKey().defaultRandom(),
   toolId: uuid('tool_id').references(() => mcpTools.id, { onDelete: 'cascade' }).notNull(),
-  pricingId: text('pricing_id'), // Now stores pricing UUID from payment field (no foreign key)
   timestamp: timestamp('timestamp').defaultNow().notNull(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
   requestData: jsonb('request_data'),
@@ -212,12 +209,10 @@ export const toolUsage = pgTable('tool_usage', {
   result: jsonb('result'),
 }, (table) => [
   index('tool_usage_tool_id_idx').on(table.toolId),
-  index('tool_usage_pricing_id_idx').on(table.pricingId), // Add index for pricing lookup
   index('tool_usage_user_id_idx').on(table.userId),
   index('tool_usage_timestamp_idx').on(table.timestamp),
   index('tool_usage_status_idx').on(table.responseStatus),
   index('tool_usage_tool_timestamp_idx').on(table.toolId, table.timestamp),
-  index('tool_usage_tool_pricing_idx').on(table.toolId, table.pricingId), // Composite index for queries
 ]);
 
 export const payments = pgTable('payments', {
@@ -365,7 +360,6 @@ export const mcpToolsRelations = relations(mcpTools, ({ one, many }) => ({
     fields: [mcpTools.serverId],
     references: [mcpServers.id],
   }),
-  // pricing relation removed - pricing data now stored in payment jsonb field
   usage: many(toolUsage),
   payments: many(payments),
   proofs: many(proofs),
@@ -412,14 +406,11 @@ export const accountRelations = relations(account, ({ one }) => ({
   }),
 }));
 
-// toolPricingRelations removed - pricing data now stored in mcpTools.payment jsonb field
-
 export const toolUsageRelations = relations(toolUsage, ({ one }) => ({
   tool: one(mcpTools, {
     fields: [toolUsage.toolId],
     references: [mcpTools.id],
   }),
-  // pricing relation removed - pricingId now stores UUID string from payment field (no foreign key)
   user: one(users, {
     fields: [toolUsage.userId],
     references: [users.id],

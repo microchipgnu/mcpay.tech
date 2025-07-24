@@ -1,18 +1,23 @@
 import { txOperations } from "@/lib/gateway/db/actions";
 import { mcpTools } from "@/lib/gateway/db/schema";
 import { experimental_createMCPClient } from "ai";
+import { PricingEntry } from "./payments";
 
 export type McpServerList = Awaited<ReturnType<ReturnType<typeof txOperations.listMcpServers>>>;
 export type McpServerWithRelations = McpServerList[number];
 export type McpServerWithActivity = Awaited<ReturnType<ReturnType<typeof txOperations.listMcpServersByActivity>>>[number];
-
 export type McpServerWithStats = Awaited<ReturnType<ReturnType<typeof txOperations.getMcpServerWithStats>>>
-
 export type DailyServerAnalytics = Awaited<ReturnType<ReturnType<typeof txOperations.getDailyServerAnalytics>>>;
-
-export type ToolFromMcpServerWithStats = NonNullable<McpServerWithStats>['tools'][number];
+export type ToolFromMcpServerWithStats = NonNullable<McpServerWithStats>['tools'][number]
 
 export type ServerSummaryAnalytics = Awaited<ReturnType<ReturnType<typeof txOperations.getServerSummaryAnalytics>>>;
+
+export type ServerRegistrationData = Awaited<ReturnType<ReturnType<typeof txOperations.getServerRegistrationData>>>;
+export type ServerCreateData = Awaited<ReturnType<ReturnType<typeof txOperations.createServer>>>;
+
+export type MCPClient = Awaited<ReturnType<typeof experimental_createMCPClient>>
+export type MCPToolsCollection = Record<string, unknown>
+
 
 // Enhanced metadata type for server registration
 export interface ServerRegistrationMetadata {
@@ -21,24 +26,6 @@ export interface ServerRegistrationMetadata {
   monetizedToolsCount: number;
   registeredFromUI: boolean;
   [key: string]: unknown; // Allow additional metadata fields
-}
-
-// Tool payment information
-export interface ToolPaymentInfo {
-  asset: string;
-  network: string;
-  maxAmountRequired: string;
-  description?: string;
-  payTo?: string;
-  resource?: string;
-}
-
-// Tool with payment information
-export interface ToolWithPayment {
-  name: string;
-  description: string;
-  inputSchema?: unknown;
-  payment?: ToolPaymentInfo;
 }
 
 // API Key interface
@@ -51,30 +38,6 @@ export interface ApiKey {
   expiresAt?: string;
   isActive: boolean;
 }
-
-// Enhanced ServerRegistrationData with proper typing
-export interface EnhancedServerRegistrationData {
-  id: string;
-  serverId: string;
-  mcpOrigin: string;
-  creatorId?: string;
-  receiverAddress: string;
-  requireAuth: boolean;
-  authHeaders?: unknown;
-  createdAt: string;
-  updatedAt: string;
-  status: string;
-  name: string;
-  description: string;
-  tools: ToolWithPayment[];
-  metadata: ServerRegistrationMetadata;
-}
-
-export type ServerRegistrationData = Awaited<ReturnType<ReturnType<typeof txOperations.getServerRegistrationData>>>;
-export type ServerCreateData = Awaited<ReturnType<ReturnType<typeof txOperations.createServer>>>;
-
-export type MCPClient = Awaited<ReturnType<typeof experimental_createMCPClient>>
-export type MCPToolsCollection = Record<string, unknown>
 
 
 export interface InputProperty {

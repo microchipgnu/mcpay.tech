@@ -13,9 +13,20 @@ import { auth } from "@/lib/gateway/auth";
 import { generateApiKey } from "@/lib/gateway/auth-utils";
 import { txOperations, withTransaction } from "@/lib/gateway/db/actions";
 import { getMcpTools } from "@/lib/gateway/inspect-mcp";
-import { AppContext, CDPNetwork, CDPWalletMetadata, ExecutionHeaders, McpServerWithActivity, McpServerWithRelations, ToolPaymentInfo, type CreateCDPWalletOptions } from "@/types";
+import { AppContext, CDPNetwork, CDPWalletMetadata, ExecutionHeaders, McpServerWithActivity, McpServerWithRelations, type CreateCDPWalletOptions } from "@/types";
 import { type AuthType } from "@/types/auth";
 import { type BlockchainArchitecture } from "@/types/blockchain";
+import { 
+  CreateServerForAuthenticatedUserInput,
+  CreateUserInput,
+  CreateToolInput,
+  CreatePaymentInput,
+  RecordToolUsageInput,
+  AddWalletToUserInput,
+  CreateApiKeyInput,
+  GetTxOperationInput,
+  TxOperationMethods
+} from "@/types/database-actions";
 import { Hono, type Context, type Next } from "hono";
 import { handle } from "hono/vercel";
 import { randomUUID } from "node:crypto";
@@ -63,36 +74,6 @@ function serializeBigInts<T>(obj: T): SerializeBigInts<T> {
 
     return obj as SerializeBigInts<T>;
 }
-
-/**
- * Authentication Middlewares with Type Safety
- * 
- * Usage Examples:
- * 
- * 1. Required Authentication:
- *    app.get('/protected-endpoint', authMiddleware, async (c) => {
- *        const session = c.get('session')!; // Guaranteed to exist after authMiddleware
- *        const user = c.get('user')!; // Guaranteed to exist after authMiddleware
- *        // Or use the helper:
- *        const user = c.get('requireUser')();
- *    });
- * 
- * 2. Optional Authentication:
- *    app.get('/public-endpoint', optionalAuthMiddleware, async (c) => {
- *        const user = c.get('user'); // May be undefined
- *        if (user) {
- *            // Provide personalized experience
- *        } else {
- *            // Provide anonymous experience
- *        }
- *    });
- * 
- * 3. User Authorization (after authMiddleware):
- *    const user = c.get('requireUser')();
- *    if (user.id !== userId) {
- *        return c.json({ error: 'Forbidden' }, 403);
- *    }
- */
 
 // Authentication middleware - ensures user is authenticated
 const authMiddleware = async (c: Context<AppContext>, next: Next) => {
@@ -211,94 +192,6 @@ app.get('/servers', optionalAuthMiddleware, async (c) => {
     }
 })
 
-app.get('/servers/search', async (c) => {
-    const searchTerm = c.req.query('q')
-    const limitParam = c.req.query('limit')
-    const offsetParam = c.req.query('offset')
-
-    // Input validation and sanitization
-    if (!searchTerm || typeof searchTerm !== 'string') {
-        return c.json({ error: 'Search term is required and must be a string' }, 400)
-    }
-
-    // Validate search term
-    const trimmedSearchTerm = searchTerm.trim()
-    if (trimmedSearchTerm.length < 1) {
-        return c.json({ error: 'Search term cannot be empty' }, 400)
-    }
-
-    if (trimmedSearchTerm.length > 100) {
-        return c.json({ error: 'Search term too long (maximum 100 characters)' }, 400)
-    }
-
-    // Check for suspicious patterns that might indicate an attack
-    const suspiciousPatterns = [
-        /[<>]/,  // HTML/XML tags
-        /['"]/,  // Quote characters
-        /--|\/\*|\*\//, // SQL comment patterns
-        /\b(DROP|DELETE|UPDATE|INSERT|ALTER|CREATE|TRUNCATE|EXEC|EXECUTE|UNION|SELECT)\b/i, // SQL keywords
-        /\b(script|javascript|vbscript|onload|onerror|onclick)\b/i, // Script injection patterns
-    ]
-
-    for (const pattern of suspiciousPatterns) {
-        if (pattern.test(trimmedSearchTerm)) {
-            return c.json({ error: 'Invalid search term' }, 400)
-        }
-    }
-
-    // Validate and sanitize numeric parameters
-    let limit = 10
-    let offset = 0
-
-    if (limitParam) {
-        const parsedLimit = parseInt(limitParam as string)
-        if (isNaN(parsedLimit) || parsedLimit < 1 || parsedLimit > 100) {
-            return c.json({ error: 'Invalid limit parameter (must be between 1 and 100)' }, 400)
-        }
-        limit = parsedLimit
-    }
-
-    if (offsetParam) {
-        const parsedOffset = parseInt(offsetParam as string)
-        if (isNaN(parsedOffset) || parsedOffset < 0) {
-            return c.json({ error: 'Invalid offset parameter (must be non-negative)' }, 400)
-        }
-        offset = parsedOffset
-    }
-
-    // Basic rate limiting check (could be enhanced with Redis or similar)
-    const userAgent = c.req.header('User-Agent') || 'unknown'
-    const clientIP = c.req.header('X-Forwarded-For') || c.req.header('CF-Connecting-IP') || 'unknown'
-
-    // Log the search for monitoring (in production, you might want to implement proper rate limiting)
-    console.log(`Search request: "${trimmedSearchTerm}" from IP: ${clientIP}, UA: ${userAgent}`)
-
-    try {
-        const servers = await withTransaction(async (tx) => {
-            return await txOperations.searchMcpServers(trimmedSearchTerm, limit, offset)(tx);
-        })
-
-        // Additional safety: ensure we don't return more than expected
-        const safeServers = servers.slice(0, limit)
-
-        return c.json(safeServers)
-    } catch (error) {
-        console.error('Error searching servers:', error)
-
-        // Don't expose internal error details to client
-        if (error instanceof Error) {
-            // Only expose validation errors
-            if (error.message.includes('Invalid search term') ||
-                error.message.includes('Search term too short') ||
-                error.message.includes('Search term too long')) {
-                return c.json({ error: error.message }, 400)
-            }
-        }
-
-        return c.json({ error: 'Search failed. Please try again.' }, 500)
-    }
-})
-
 app.get('/servers/:id', async (c) => {
     const serverId = c.req.param('id')
 
@@ -368,36 +261,7 @@ app.get('/servers/:id/registration', authMiddleware, async (c) => {
 
 app.post('/servers', authMiddleware, async (c) => {
     try {
-        const data = await c.req.json() as {
-            mcpOrigin: string;
-            receiverAddress: string;
-            requireAuth?: boolean;
-            authHeaders?: Record<string, unknown>;
-            description?: string;
-            metadata?: Record<string, unknown>;
-            name?: string;
-            tools?: Array<{
-                name: string;
-                payment?: ToolPaymentInfo
-            }>;
-            walletInfo?: {
-                blockchain?: string;
-                walletType?: 'external' | 'managed' | 'custodial';
-                provider?: string;
-                network?: string;
-            };
-        }
-
-        // TODO: Replace with actual DB call
-        // const server = await withTransaction(async (tx) => {
-        //     return await txOperations.createMcpServer({
-        //         name,
-        //         description,
-        //         origin,
-        //         authHeaders,
-        //         requireAuth: requireAuth || false
-        //     })(tx);
-        // });
+        const data = await c.req.json() as CreateServerForAuthenticatedUserInput
 
         const id = randomUUID()
 
@@ -408,11 +272,7 @@ app.post('/servers', authMiddleware, async (c) => {
             return c.json({ error: 'Failed to fetch tools' }, 400)
         }
 
-        const toolsData = tools.map((tool) => ({
-            name: tool.name,
-            description: tool.description,
-            inputSchema: tool.inputSchema,
-        }))
+        // Tools data will be processed directly in the database action
 
 
         // const serverInformation = await generateObject({
@@ -444,24 +304,19 @@ app.post('/servers', authMiddleware, async (c) => {
                     authenticatedUserId: user.id,
                     receiverAddress: data.receiverAddress,
                     requireAuth: data.requireAuth,
-                    authHeaders: data.authHeaders,
-                    name: data.name,
-                    description: data.description,
-                    metadata: data.metadata,
-                    walletInfo: data.walletInfo,
-                    tools: toolsData.map((tool) => {
+                    authHeaders: data.authHeaders as Record<string, unknown> | undefined,
+                    name: data.name || undefined,
+                    description: data.description || undefined,
+                    metadata: data.metadata as Record<string, unknown> | undefined,
+                    walletInfo: data.walletInfo as Record<string, unknown> | undefined,
+                    tools: tools.map((tool) => {
                         const monetizedTool = data.tools?.find((t) => t.name === tool.name)
                         return {
                             name: tool.name,
                             description: tool.description,
-                            inputSchema: tool.inputSchema ? JSON.parse(JSON.stringify(tool.inputSchema)) : {},
-                            payment: monetizedTool?.payment ? {
-                                maxAmountRequired: parseFloat(monetizedTool.payment.maxAmountRequired),
-                                asset: monetizedTool.payment.asset,
-                                network: monetizedTool.payment.network,
-                                payTo: monetizedTool.payment.payTo,
-                                resource: monetizedTool.payment.resource,
-                            } : undefined
+                            inputSchema: tool.inputSchema as Record<string, unknown>,
+                            outputSchema: {} as Record<string, unknown>, // MCP tools don't have outputSchema yet
+                            pricing: monetizedTool?.pricing ? monetizedTool.pricing : undefined
                         }
                     })
                 })(tx);

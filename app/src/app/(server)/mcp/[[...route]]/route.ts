@@ -15,8 +15,8 @@ import { auth } from "@/lib/gateway/auth";
 import { txOperations, withTransaction } from "@/lib/gateway/db/actions";
 import { attemptAutoSign } from "@/lib/gateway/payment-strategies";
 import { createExactPaymentRequirements, decodePayment, settle, verifyPayment, x402Version } from "@/lib/gateway/payments";
-import { type AuthType, type MCPTool, type PaymentInfo, type ToolCall, type UserWithWallet } from "@/types";
-import { settleResponseHeader, SupportedNetwork } from "@/types/x402";
+import { PricingEntry, type AuthType, type MCPTool, type ToolCall, type UserWithWallet } from "@/types";
+import { ExtendedPaymentRequirements, settleResponseHeader, SupportedNetwork } from "@/types/x402";
 import { Hono, type Context } from "hono";
 import { handle } from "hono/vercel";
 
@@ -47,12 +47,12 @@ function ensureString(value: string | undefined, fallback: string = 'unknown'): 
  */
 async function getAuthMethod(c: Context, user: UserWithWallet | null): Promise<string> {
     if (!user) return 'none';
-    
+
     // Check API key first
     if (extractApiKeyFromHeaders(c.req.raw.headers)) {
         return 'api_key';
     }
-    
+
     // Check session authentication
     try {
         const authResult = await auth.api.getSession({ headers: c.req.raw.headers });
@@ -62,7 +62,7 @@ async function getAuthMethod(c: Context, user: UserWithWallet | null): Promise<s
     } catch {
         // Session check failed, continue to wallet header
     }
-    
+
     // Default to wallet header if user exists but no API key or session
     return 'wallet_header';
 }
@@ -210,14 +210,17 @@ const inspectRequest = async (c: Context): Promise<{ toolCall?: ToolCall, body?:
 
                         // Check if this is a paid tool by looking up in DB
                         let isPaid = false;
-                        let paymentDetails = undefined;
+                        let pricing: PricingEntry[] | undefined = undefined;
                         let toolId = undefined;
                         let serverId = undefined;
+                        let payTo = undefined;
 
                         if (id) {
                             const server = await withTransaction(async (tx) => {
                                 return await txOperations.internal_getMcpServerByServerId(id)(tx);
                             });
+
+                            payTo = server?.receiverAddress;
 
                             if (server) {
                                 // Store the internal server ID for later use
@@ -235,51 +238,14 @@ const inspectRequest = async (c: Context): Promise<{ toolCall?: ToolCall, body?:
                                 if (toolConfig) {
                                     toolId = toolConfig.id;
 
-                                    if (toolConfig.isMonetized) {
-                                        // Get active pricing from tool_pricing table
-                                        const activePricing = await withTransaction(async (tx) => {
-                                            return await txOperations.getActiveToolPricing(toolConfig.id)(tx);
-                                        });
+                                    // Check for active pricing entries
+                                    const activePricings = (toolConfig.pricing as PricingEntry[] || []).filter(p => p.active === true);
 
-                                        if (activePricing && toolConfig.payment) {
-                                            isPaid = true;
+                                    if (activePricings.length > 0) {
+                                        isPaid = true;
+                                        pricing = activePricings;
 
-                                            // Convert price from base units to human-readable amount
-                                            const humanReadableAmount = fromBaseUnits(
-                                                activePricing.amountRaw,
-                                                activePricing.tokenDecimals
-                                            );
-
-                                            // Use the base payment structure from toolConfig.payment and override the amount
-                                            const basePayment = toolConfig.payment as PaymentInfo;
-                                            paymentDetails = {
-                                                ...basePayment,
-                                                // Use human-readable amount - createExactPaymentRequirements will convert to base units internally
-                                                maxAmountRequired: humanReadableAmount,
-                                                // Add pricing metadata for reference
-                                                _pricingInfo: {
-                                                    humanReadableAmount,
-                                                    currency: activePricing.currency,
-                                                    network: activePricing.network,
-                                                    tokenDecimals: activePricing.tokenDecimals,
-                                                    assetAddress: activePricing.assetAddress,
-                                                    amountRaw: activePricing.amountRaw, // Keep original base units for reference
-                                                    pricingId: activePricing.id // Store pricing ID for usage tracking
-                                                }
-                                            };
-
-                                            console.log('\x1b[33m%s\x1b[0m', `[${new Date().toISOString()}] Paid tool identified:`);
-                                            console.log('\x1b[33m%s\x1b[0m', `  Human-readable amount: ${humanReadableAmount} ${activePricing.currency}`);
-                                            console.log('\x1b[33m%s\x1b[0m', `  Base units amount: ${activePricing.amountRaw}`);
-                                            console.log('\x1b[33m%s\x1b[0m', `  Token decimals: ${activePricing.tokenDecimals}`);
-                                            console.log('\x1b[33m%s\x1b[0m', `  Payment details: ${JSON.stringify(paymentDetails, null, 2)}`);
-                                        } else if (toolConfig.payment) {
-                                            // Fallback to legacy payment structure if no pricing table entry
-                                            isPaid = true;
-                                            paymentDetails = toolConfig.payment;
-                                            console.log('\x1b[33m%s\x1b[0m', `[${new Date().toISOString()}] Paid tool identified (legacy payment structure):`);
-                                            console.log('\x1b[33m%s\x1b[0m', `  Payment details: ${JSON.stringify(paymentDetails, null, 2)}`);
-                                        }
+                                        // TODO: pick a pricing entry based on the user's wallet address
                                     }
                                 }
                             }
@@ -292,11 +258,11 @@ const inspectRequest = async (c: Context): Promise<{ toolCall?: ToolCall, body?:
                             name: toolName,
                             args: toolArgs || {},
                             isPaid,
-                            ...(paymentDetails && { payment: paymentDetails as PaymentInfo }),
+                            payTo: payTo || undefined,
+                            pricing: pricing ? pricing : undefined,
                             ...(id && { id: id }),
                             ...(toolId && { toolId }),
                             ...(serverId && { serverId }),
-                            ...(paymentDetails && (paymentDetails as PaymentInfo)._pricingInfo?.pricingId && { pricingId: (paymentDetails as PaymentInfo)._pricingInfo!.pricingId })
                         };
 
                         if (jsonData.params._meta) {
@@ -329,25 +295,25 @@ async function resolveUserFromRequest(c: Context): Promise<UserWithWallet | null
             const apiKeyResult = await withTransaction(async (tx) => {
                 return await txOperations.validateApiKey(keyHash)(tx);
             });
-            
+
             if (apiKeyResult?.user) {
                 console.log(`[${new Date().toISOString()}] User authenticated via API key: ${apiKeyResult.user.id}`);
-                
+
                 // Get user's primary/managed wallet for auto-signing
                 const userWallets = await withTransaction(async (tx) => {
                     return await txOperations.getUserWallets(apiKeyResult.user.id, true)(tx);
                 });
-                
+
                 const primaryWallet = userWallets.find(w => w.isPrimary) || userWallets[0];
-                
+
                 if (primaryWallet) {
                     console.log(`[${new Date().toISOString()}] Found wallet for API key user: ${primaryWallet.walletAddress} (${primaryWallet.walletType})`);
-                    
+
                     // Get full user record to ensure all required fields are present
                     const fullUser = await withTransaction(async (tx) => {
                         return await txOperations.getUserById(apiKeyResult.user.id)(tx);
                     });
-                    
+
                     if (fullUser) {
                         return {
                             ...fullUser,
@@ -356,12 +322,12 @@ async function resolveUserFromRequest(c: Context): Promise<UserWithWallet | null
                     }
                 } else {
                     console.log(`[${new Date().toISOString()}] API key user has no wallets, will need auto-creation for managed payments`);
-                    
+
                     // Get full user record for consistency
                     const fullUser = await withTransaction(async (tx) => {
                         return await txOperations.getUserById(apiKeyResult.user.id)(tx);
                     });
-                    
+
                     if (fullUser) {
                         return {
                             ...fullUser,
@@ -374,29 +340,29 @@ async function resolveUserFromRequest(c: Context): Promise<UserWithWallet | null
             console.warn(`[${new Date().toISOString()}] API key validation failed:`, error);
         }
     }
-    
+
     // 2. Second priority: Session-based authentication (better-auth)
     try {
         const authResult = await auth.api.getSession({ headers: c.req.raw.headers });
-        
+
         if (authResult?.session && authResult?.user) {
             console.log(`[${new Date().toISOString()}] User authenticated via session: ${authResult.user.id}`);
-            
+
             // Get user's primary/managed wallet for auto-signing
             const userWallets = await withTransaction(async (tx) => {
                 return await txOperations.getUserWallets(authResult.user.id, true)(tx);
             });
-            
+
             const primaryWallet = userWallets.find(w => w.isPrimary) || userWallets[0];
-            
+
             if (primaryWallet) {
                 console.log(`[${new Date().toISOString()}] Found wallet for session user: ${primaryWallet.walletAddress} (${primaryWallet.walletType})`);
-                
+
                 // Get full user record to ensure all required fields are present
                 const fullUser = await withTransaction(async (tx) => {
                     return await txOperations.getUserById(authResult.user.id)(tx);
                 });
-                
+
                 if (fullUser) {
                     return {
                         ...fullUser,
@@ -405,12 +371,12 @@ async function resolveUserFromRequest(c: Context): Promise<UserWithWallet | null
                 }
             } else {
                 console.log(`[${new Date().toISOString()}] Session user has no wallets, will need auto-creation for managed payments`);
-                
+
                 // Get full user record for consistency
                 const fullUser = await withTransaction(async (tx) => {
                     return await txOperations.getUserById(authResult.user.id)(tx);
                 });
-                
+
                 if (fullUser) {
                     return {
                         ...fullUser,
@@ -422,14 +388,14 @@ async function resolveUserFromRequest(c: Context): Promise<UserWithWallet | null
     } catch (error) {
         console.warn(`[${new Date().toISOString()}] Session authentication failed:`, error);
     }
-    
+
     // 3. Third priority: Existing wallet address header method
     const walletAddress = c.req.header('X-Wallet-Address');
     if (walletAddress) {
         console.log(`[${new Date().toISOString()}] Using wallet address header: ${walletAddress}`);
         return await getOrCreateUser(walletAddress);
     }
-    
+
     return null;
 }
 
@@ -522,10 +488,9 @@ async function recordAnalytics(params: {
     c: Context;
     responseData?: Record<string, unknown>;
     paymentAmount?: string;
-    pricingId?: string; // Optional pricing ID to associate with usage
     authMethod?: string; // Authentication method used
 }) {
-    const { toolCall, user, startTime, upstream, c, responseData, paymentAmount, pricingId, authMethod } = params;
+    const { toolCall, user, startTime, upstream, c, responseData, paymentAmount, authMethod } = params;
 
     if (!toolCall.toolId || !toolCall.serverId) {
         return;
@@ -533,22 +498,21 @@ async function recordAnalytics(params: {
 
     await withTransaction(async (tx) => {
         // Record tool usage
-                        await txOperations.recordToolUsage({
-                    toolId: ensureString(toolCall.toolId),
-                    userId: user?.id,
-                    pricingId, // Include pricing reference if available
-                    responseStatus: upstream.status.toString(),
-                    executionTimeMs: Date.now() - startTime,
-                    ipAddress: c.req.header('x-forwarded-for') || c.req.header('x-real-ip'),
-                    userAgent: c.req.header('user-agent'),
-                    requestData: {
-                        toolName: toolCall.name,
-                        args: toolCall.args,
-                        // Add authentication method tracking
-                        authMethod: authMethod
-                    },
-                    result: responseData
-                })(tx);
+        await txOperations.recordToolUsage({
+            toolId: ensureString(toolCall.toolId),
+            userId: user?.id,
+            responseStatus: upstream.status.toString(),
+            executionTimeMs: Date.now() - startTime,
+            ipAddress: c.req.header('x-forwarded-for') || c.req.header('x-real-ip'),
+            userAgent: c.req.header('user-agent'),
+            requestData: {
+                toolName: toolCall.name,
+                args: toolCall.args,
+                // Add authentication method tracking
+                authMethod: authMethod
+            },
+            result: responseData
+        })(tx);
 
         // Update daily analytics using internal server ID
         const today = new Date();
@@ -556,9 +520,9 @@ async function recordAnalytics(params: {
         // Calculate converted revenue amount if payment was made
         let convertedRevenue: number | undefined = undefined;
         if (paymentAmount && toolCall.isPaid) {
-            // Get pricing information for accurate conversion
-            const activePricing = await txOperations.getActiveToolPricing(ensureString(toolCall.toolId))(tx);
-            if (activePricing) {
+            // Use active pricing from tool call for accurate conversion
+            const activePricing = toolCall.pricing;
+            if (activePricing && activePricing.length > 0) {
                 try {
                     // Try to convert from base units to human-readable amount for analytics
                     // Check if paymentAmount looks like base units (all digits) or human-readable (contains decimal)
@@ -566,13 +530,13 @@ async function recordAnalytics(params: {
 
                     if (isBaseUnits) {
                         // Convert from base units to human-readable amount
-                        const humanReadableAmount = fromBaseUnits(paymentAmount, activePricing.tokenDecimals);
+                        const humanReadableAmount = fromBaseUnits(paymentAmount, activePricing[0].tokenDecimals);
                         convertedRevenue = parseFloat(humanReadableAmount);
-                        console.log(`[${new Date().toISOString()}] Analytics: Recording revenue of ${humanReadableAmount} ${activePricing.currency} (base units: ${paymentAmount})`);
+                        console.log(`[${new Date().toISOString()}] Analytics: Recording revenue of ${humanReadableAmount} ${activePricing[0].assetAddress} (base units: ${paymentAmount})`);
                     } else {
                         // Already in human-readable format
                         convertedRevenue = parseFloat(paymentAmount);
-                        console.log(`[${new Date().toISOString()}] Analytics: Recording revenue of ${paymentAmount} ${activePricing.currency} (already human-readable)`);
+                        console.log(`[${new Date().toISOString()}] Analytics: Recording revenue of ${paymentAmount} ${activePricing[0].assetAddress} (already human-readable)`);
                     }
                 } catch (error) {
                     // Fallback if conversion fails - treat as human-readable
@@ -602,12 +566,20 @@ async function processPayment(params: {
 }): Promise<{ success: boolean; error?: string; user?: UserWithWallet } | Response> {
     const { toolCall, c, user, startTime } = params;
 
-    if (!toolCall.isPaid || !toolCall.toolId) {
+    if (!toolCall.isPaid || !toolCall.toolId || !toolCall.pricing) {
         return { success: true, user: user || undefined };
     }
 
+    if (!toolCall.payTo) {
+        return {
+            success: false,
+            error: "No payTo address available for paid tool",
+            user: user || undefined
+        };
+    }
+
     console.log(`[${new Date().toISOString()}] Paid tool call detected: ${toolCall.name}`);
-    console.log(`[${new Date().toISOString()}] Payment details: ${JSON.stringify(toolCall.payment || {}, null, 2)}`);
+    console.log(`[${new Date().toISOString()}] Payment details: ${JSON.stringify(toolCall.pricing || {}, null, 2)}`);
 
     // Check if payment header already exists
     let paymentHeader = c.req.header("X-PAYMENT");
@@ -618,7 +590,7 @@ async function processPayment(params: {
     // OR if API key authentication is present (indicates programmatic access)
     const managedWalletHeaders = c.req.header('x-wallet-provider') === 'coinbase-cdp' && c.req.header('x-wallet-type') === 'managed';
     const hasApiKey = !!extractApiKeyFromHeaders(c.req.raw.headers);
-    const shouldAutoSign = toolCall.payment && (
+    const shouldAutoSign = toolCall.pricing && (
         (!paymentHeader) && (
             managedWalletHeaders || hasApiKey
         )
@@ -631,17 +603,22 @@ async function processPayment(params: {
     if (shouldAutoSign) {
         console.log(`[${new Date().toISOString()}] ${!paymentHeader ? 'No X-PAYMENT header found' : 'Managed wallet headers detected'}, attempting auto-signing`);
 
+        const humanReadableAmount = fromBaseUnits(
+            toolCall.pricing?.[0]?.maxAmountRequiredRaw || "0",
+            toolCall.pricing?.[0]?.tokenDecimals || 6
+        );
+
         try {
             // Create a properly typed tool call for auto-signing
             const autoSignToolCall = {
                 isPaid: toolCall.isPaid,
                 payment: {
-                    maxAmountRequired: toolCall.payment!.maxAmountRequired,
-                    network: toolCall.payment!.network,
-                    asset: toolCall.payment!.asset,
-                    payTo: toolCall.payment!.payTo,
-                    resource: toolCall.payment!.resource,
-                    description: toolCall.payment!.description
+                    maxAmountRequired: humanReadableAmount,
+                    network: toolCall.pricing?.[0]?.network,
+                    asset: toolCall.pricing?.[0]?.assetAddress,
+                    payTo: toolCall.payTo,
+                    resource: `mcpay://${toolCall.name}`,
+                    description: `Execution of ${toolCall.name}`
                 }
             };
 
@@ -671,16 +648,8 @@ async function processPayment(params: {
         }
     }
 
-    if (!toolCall.payment) {
-        return {
-            success: false,
-            error: "No payment information available for paid tool",
-            user: user || undefined
-        };
-    }
-
     // Ensure payTo field exists, default to asset address if missing
-    const payTo = toolCall.payment.payTo;
+    const payTo = toolCall.payTo;
 
     if (!payTo) {
         return {
@@ -690,12 +659,17 @@ async function processPayment(params: {
         };
     }
 
+    const humanReadableAmount = fromBaseUnits(
+        toolCall.pricing?.[0]?.maxAmountRequiredRaw || "0",
+        toolCall.pricing?.[0]?.tokenDecimals || 6
+    );
+
     const paymentRequirements = [
         createExactPaymentRequirements(
-            toolCall.payment.maxAmountRequired,
-            toolCall.payment.network as SupportedNetwork,
-            toolCall.payment.resource as `${string}://${string}`,
-            toolCall.payment.description,
+            humanReadableAmount,
+            toolCall.pricing?.[0]?.network as SupportedNetwork,
+            `mcpay://${toolCall.name}`,
+            `Execution of ${toolCall.name}`,
             payTo as `0x${string}`
         ),
     ];
@@ -823,14 +797,14 @@ async function processPayment(params: {
         // Record successful payment in database
         if (toolCall.toolId && toolCall.serverId) {
             await withTransaction(async (tx) => {
-                // Get pricing information for accurate decimals
-                const activePricing = await txOperations.getActiveToolPricing(ensureString(toolCall.toolId))(tx);
+                // Use active pricing from tool call
+                const activePricing = toolCall.pricing;
 
-                // Use pricing table data if available, otherwise fallback to payment data
-                const currency = activePricing?.currency || paymentRequirement.asset;
-                const tokenDecimals = activePricing?.tokenDecimals || 6; // Default to USDC decimals if no pricing data
-                // Use original priceRaw from pricing table for database accuracy, fallback to converted amount
-                const amountRaw = activePricing?.amountRaw || paymentRequirement.maxAmountRequired || "0";
+                // Use pricing data if available, otherwise fallback to payment data
+                const currency = activePricing?.[0]?.assetAddress || paymentRequirement.asset;
+                const tokenDecimals = activePricing?.[0]?.tokenDecimals || 6; // Default to USDC decimals if no pricing data
+                // Use original priceRaw from pricing data for database accuracy, fallback to converted amount
+                const amountRaw = activePricing?.[0]?.maxAmountRequiredRaw || paymentRequirement.maxAmountRequired || "0";
 
                 const paymentRecord = await txOperations.createPayment({
                     toolId: ensureString(toolCall.toolId),
@@ -847,11 +821,11 @@ async function processPayment(params: {
                         settleResponse,
                         // Include pricing metadata for reference
                         pricingInfo: activePricing ? {
-                            amountRaw: activePricing.amountRaw,
-                            tokenDecimals: activePricing.tokenDecimals,
-                            currency: activePricing.currency,
-                            network: activePricing.network,
-                            assetAddress: activePricing.assetAddress
+                            amountRaw: activePricing[0].maxAmountRequiredRaw,
+                            tokenDecimals: activePricing[0].tokenDecimals,
+                            currency: activePricing[0].assetAddress,
+                            network: activePricing[0].network,
+                            assetAddress: activePricing[0].assetAddress
                         } : undefined
                     }
                 })(tx);
@@ -891,7 +865,7 @@ verbs.forEach(verb => {
         let user: UserWithWallet | null = await resolveUserFromRequest(c);
         // Determine authentication method for logging and analytics
         const authMethod = await getAuthMethod(c, user);
-        
+
         console.log(`[${new Date().toISOString()}] User resolved: ${user ? user.id : 'none'} via ${authMethod}`);
 
         // Process payment if this is a paid tool call
@@ -908,20 +882,34 @@ verbs.forEach(verb => {
 
             if (!paymentResultObj.success) {
                 c.status(402);
-                if (!toolCall.payment) {
+                if (!toolCall.pricing) {
                     return c.json({
                         x402Version,
                         error: "No payment information available",
                         accepts: [],
                     });
                 }
-                const payTo = toolCall.payment.payTo || toolCall.payment.asset;
+
+                const payTo = toolCall.payTo;
+                if (!payTo) {
+                    return c.json({
+                        x402Version,
+                        error: "No receiver address available for paid tool",
+                        accepts: [],
+                    });
+                }
+                // Convert price from base units to human-readable amount
+                const humanReadableAmount = fromBaseUnits(
+                    toolCall.pricing[0].maxAmountRequiredRaw,
+                    toolCall.pricing[0].tokenDecimals
+                );
+
                 const paymentRequirements = [
                     createExactPaymentRequirements(
-                        toolCall.payment.maxAmountRequired,
-                        toolCall.payment.network as SupportedNetwork,
-                        toolCall.payment.resource as `${string}://${string}`,
-                        toolCall.payment.description,
+                        humanReadableAmount,
+                        toolCall.pricing[0].network as SupportedNetwork,
+                        `mcpay://${toolCall.name}`,
+                        `Execution of ${toolCall.name}`,
                         payTo as `0x${string}`
                     ),
                 ];
@@ -956,10 +944,8 @@ verbs.forEach(verb => {
                 responseData,
                 // Pass base units amount from pricing metadata if available, otherwise use the amount as-is
                 paymentAmount: toolCall.isPaid ?
-                    (toolCall.payment?._pricingInfo?.amountRaw || toolCall.payment?.maxAmountRequired) :
+                    (toolCall.pricing?.[0]?.maxAmountRequiredRaw) :
                     undefined,
-                // Pass pricing ID for usage tracking
-                pricingId: toolCall.pricingId,
                 // Pass authentication method
                 authMethod: authMethod
             });

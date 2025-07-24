@@ -134,6 +134,13 @@
       "when": 1753290961992,
       "tag": "0018_careful_zemo",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1753314771972,
+      "tag": "0019_sharp_giant_girl",
+      "breakpoints": true
     }
   ]
 }

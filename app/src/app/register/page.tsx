@@ -30,7 +30,8 @@ import { useConnect } from "wagmi"
 
 import { getNetworkByChainId } from "@/lib/commons"
 import { useChainId } from "wagmi"
-
+import { PricingEntry } from "@/types"
+  
 // Helper function to format wallet address for display
 const formatWalletAddress = (address: string): string => {
   if (!address) return ''
@@ -175,33 +176,14 @@ function RegisterPageContent() {
         .filter(tool => tool.price && parseFloat(tool.price) > 0)
         .map(tool => ({
           name: tool.name,
-          payment: {
-            maxAmountRequired: toBaseUnits(tool.price || "0", tokenDecimals), // Convert to base units as string
-            asset: paymentTokenAddress,
+          pricing: [{
+            maxAmountRequiredRaw: toBaseUnits(tool.price || "0", tokenDecimals), // Convert to base units as string
+            assetAddress: paymentTokenAddress,
             network: selectedNetwork,
-            resource: `tool://${tool.name}`,
-            description: `Payment for ${tool.name} tool usage`,
-            payTo: walletAddress,
-          }
+            active: true,
+            tokenDecimals: tokenDecimals,
+          }] as PricingEntry[] 
         }))
-
-      // Prepare complete tools data for the response (includes both tool info and payment)
-      const completeToolsData = tools.map(tool => ({
-        name: tool.name,
-        description: tool.description,
-        inputSchema: tool.inputSchema,
-        price: tool.price,
-        ...(tool.price && parseFloat(tool.price) > 0 && {
-          payment: {
-            maxAmountRequired: toBaseUnits(tool.price || "0", tokenDecimals), // Convert to base units as string
-            asset: paymentTokenAddress,
-            network: selectedNetwork,
-            resource: `tool://${tool.name}`,
-            description: `Payment for ${tool.name} tool usage`,
-            payTo: walletAddress,
-          }
-        })
-      }))
 
       // Prepare API request payload with enhanced wallet information
       const payload = {

@@ -175,11 +175,11 @@ app.post('/', pingAuthMiddleware, async (c) => {
         }
 
         // Extract tools with payment information
-        let toolsWithPayments;
+        let toolsWithPricing;
         try {
             // FIX THIS: receiverAddress is not always set
-            toolsWithPayments = await getMcpToolsWithPayments(mcpUrl.toString(), userWalletAddress || receiverAddress || '0x0000000000000000000000000000000000000000');
-            console.log(`Found ${toolsWithPayments.length} tools, ${toolsWithPayments.filter(t => t.payment).length} with payment info`);
+            toolsWithPricing = await getMcpToolsWithPayments(mcpUrl.toString(), userWalletAddress || receiverAddress || '0x0000000000000000000000000000000000000000');
+            console.log(`Found ${toolsWithPricing.length} tools, ${toolsWithPricing.filter(t => t.pricing).length} with pricing info`);
         } catch (error) {
             console.error('Failed to connect to MCP server:', error);
             return c.json({
@@ -192,11 +192,13 @@ app.post('/', pingAuthMiddleware, async (c) => {
         }
 
         // Log payment information for debugging
-        toolsWithPayments.forEach(tool => {
-            if (tool.payment) {
-                console.log(`Tool ${tool.name} payment info:`, tool.payment);
-                const isValid = validatePaymentInfo(tool.payment);
-                console.log(`Payment info valid: ${isValid}`);
+        toolsWithPricing.forEach(tool => {
+            if (tool.pricing) {
+                tool.pricing.forEach(pricing => {
+                    console.log(`Tool ${tool.name} pricing info:`, pricing);
+                    const isValid = validatePaymentInfo(pricing);
+                    console.log(`Payment info valid: ${isValid}`);
+                });
             }
         });
 
@@ -221,14 +223,14 @@ app.post('/', pingAuthMiddleware, async (c) => {
                         ...(existingServer.metadata && typeof existingServer.metadata === 'object' ? existingServer.metadata : {}),
                         registeredFromPing: true,
                         lastPing: new Date().toISOString(),
-                        toolsCount: toolsWithPayments.length,
-                        monetizedToolsCount: toolsWithPayments.filter(t => t.payment).length
+                        toolsCount: toolsWithPricing.length,
+                        monetizedToolsCount: toolsWithPricing.filter(t => t.pricing).length
                     },
-                    toolsData: toolsWithPayments.map(tool => ({
+                    toolsData: toolsWithPricing.map(tool => ({
                         name: tool.name,
                         description: tool.description || `Access to ${tool.name}`,
                         inputSchema: tool.inputSchema || {},
-                        payment: tool.payment
+                        pricing: tool.pricing
                     }))
                 })(tx);
 
@@ -253,20 +255,14 @@ app.post('/', pingAuthMiddleware, async (c) => {
                     metadata: {
                         registeredFromPing: true,
                         timestamp: new Date().toISOString(),
-                        toolsCount: toolsWithPayments.length,
-                        monetizedToolsCount: toolsWithPayments.filter(t => t.payment).length,
+                        toolsCount: toolsWithPricing.length,
+                        monetizedToolsCount: toolsWithPricing.filter(t => t.pricing).length,
                     },
-                    tools: toolsWithPayments.map(tool => ({
+                    tools: toolsWithPricing.map(tool => ({
                         name: tool.name,
                         description: tool.description || `Access to ${tool.name}`,
                         inputSchema: tool.inputSchema || {},
-                        payment: tool.payment ? {
-                            maxAmountRequired: parseFloat(tool.payment.maxAmountRequired),
-                            asset: tool.payment.asset,
-                            network: tool.payment.network,
-                            payTo: tool.payment.payTo,
-                            resource: tool.payment.resource,
-                        } : undefined
+                        pricing: tool.pricing
                     }))
                 })(tx);
 
@@ -278,13 +274,13 @@ app.post('/', pingAuthMiddleware, async (c) => {
             }
         });
 
-        const toolSummary = toolsWithPayments.map(tool => ({
+        const toolSummary = toolsWithPricing.map(tool => ({
             name: tool.name,
-            hasPayment: !!tool.payment,
-            paymentInfo: tool.payment ? {
-                asset: tool.payment.asset,
-                network: tool.payment.network,
-                amount: tool.payment.maxAmountRequired
+            hasPricing: !!tool.pricing,
+            pricingInfo: tool.pricing ? {
+                asset: tool.pricing[0].assetAddress,
+                network: tool.pricing[0].network,
+                amount: tool.pricing[0].maxAmountRequiredRaw
             } : null
         }));
 
@@ -296,8 +292,8 @@ app.post('/', pingAuthMiddleware, async (c) => {
                 serverId: serverResult.server.serverId,
                 name: serverResult.server.name,
                 mcpOrigin: mcpUrl.toString(),
-                toolsRegistered: toolsWithPayments.length,
-                monetizedTools: toolsWithPayments.filter(t => t.payment).length,
+                toolsRegistered: toolsWithPricing.length,
+                monetizedTools: toolsWithPricing.filter(t => t.pricing).length,
                 registrationStatus: serverResult.isNew ? 'created' : 'updated'
             },
             tools: toolSummary,

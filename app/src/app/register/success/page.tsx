@@ -11,7 +11,8 @@ import { openBlockscout } from "@/lib/client/blockscout"
 import { api } from "@/lib/client/utils"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { ServerRegistrationData, ServerRegistrationMetadata, ToolPaymentInfo } from "@/types/mcp"
+import { ServerRegistrationData, ServerRegistrationMetadata } from "@/types/mcp"
+import { PricingEntry } from "@/types"
 import { 
   formatTokenAmount,
   fromBaseUnits,
@@ -445,39 +446,23 @@ function RegisterSuccessContent() {
                       <Separator className={isDark ? "bg-gray-700" : "bg-gray-200"} />
                       
                       {/* Payment Information */}
-                      {('payment' in tool) && tool.payment && (
+                      {('pricing' in tool) && tool.pricing && (
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <span className={`text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                               Price per use
                             </span>
                             <TokenDisplay
-                              currency={(tool.payment as ToolPaymentInfo)?.asset || '0x0000000000000000000000000000000000000000'}
-                              network={(tool.payment as ToolPaymentInfo)?.network || 'base-sepolia'}
+                              currency={(tool.pricing as PricingEntry[])?.[0]?.assetAddress || '0x0000000000000000000000000000000000000000'}
+                              network={(tool.pricing as PricingEntry[])?.[0]?.network || 'base-sepolia'}
                               amount={(() => {
-                                const paymentInfo = tool.payment as ToolPaymentInfo | undefined;
-                                const rawAmount = paymentInfo?.maxAmountRequired;
-                                const network = paymentInfo?.network || 'base-sepolia';
-                                const currency = paymentInfo?.asset || '0x0000000000000000000000000000000000000000';
-                                
-                                // Debug logging
-                                console.log('Payment data debug:', {
-                                  rawAmount,
-                                  currency,
-                                  network,
-                                  fullPayment: tool.payment
-                                });
-                                
+                                const paymentInfo = tool.pricing as PricingEntry[] | undefined;
+                                const rawAmount = paymentInfo?.[0]?.maxAmountRequiredRaw;
+                                const network = paymentInfo?.[0]?.network || 'base-sepolia';
+                                const currency = paymentInfo?.[0]?.assetAddress || '0x0000000000000000000000000000000000000000';
                                 // Get token info to determine decimals
                                 const tokenInfo = getTokenInfo(currency, network as Network);
                                 const decimals = tokenInfo?.decimals || 6; // Default to 6 for USDC
-                                
-                                console.log('Token info debug:', {
-                                  tokenInfo,
-                                  decimals,
-                                  currency,
-                                  network
-                                });
                                 
                                 // Convert from base units to human-readable amount
                                 if (rawAmount !== null && rawAmount !== undefined) {
@@ -485,12 +470,6 @@ function RegisterSuccessContent() {
                                     // Raw amount should be a string
                                     const rawAmountStr = String(rawAmount);
                                     const converted = fromBaseUnits(rawAmountStr, decimals);
-                                    console.log('Conversion debug:', {
-                                      rawAmount,
-                                      rawAmountStr,
-                                      decimals,
-                                      converted
-                                    });
                                     return converted;
                                   } catch (error) {
                                     console.error('Error converting amount:', error);
@@ -510,7 +489,7 @@ function RegisterSuccessContent() {
                                 Network
                               </span>
                               <Badge variant="outline" className="text-xs py-0 px-2">
-                                {(tool.payment as ToolPaymentInfo)?.network || 'base-sepolia'}
+                                {(tool.pricing as PricingEntry)?.network || 'base-sepolia'}
                               </Badge>
                             </div>
                           </div>

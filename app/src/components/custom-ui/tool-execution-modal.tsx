@@ -19,6 +19,7 @@ import {
 } from "@/lib/commons"
 import { getNetworkInfo } from "@/lib/commons/tokens"
 import { type Network } from "@/types/blockchain"
+import { PricingEntry } from "@/types/payments"
 import { InputProperty, MCPClient, MCPToolFromClient, MCPToolsCollection, ToolExecutionModalProps, ToolInputSchema, type ToolFromMcpServerWithStats } from "@/types/mcp"
 import { type UserWallet } from "@/types/wallet"
 import { experimental_createMCPClient } from "ai"
@@ -112,6 +113,8 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
     }
   }, [primaryWallet, selectedWallet])
 
+
+
   // Get wallet connection status
   const activeWallet = selectedWallet || primaryWallet
   const walletAddress = activeWallet?.walletAddress
@@ -128,12 +131,13 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
   
   // Create stable tool reference to avoid infinite loops
   const toolInputSchemaString = useMemo(() => JSON.stringify(tool?.inputSchema), [tool?.inputSchema])
-  const toolPricingString = useMemo(() => JSON.stringify(tool?.payments), [tool?.payments])
   
   const stableTool = useMemo(() => {
     if (!tool) return null
-    return tool
-  }, [tool, tool?.id, tool?.name, toolInputSchemaString, tool?.description, tool?.isMonetized, toolPricingString])
+    return tool as ToolFromMcpServerWithStats & {
+      pricing?: PricingEntry[]
+    }
+  }, [tool, tool?.id, tool?.name, toolInputSchemaString, tool?.description, tool?.isMonetized, tool?.pricing])
 
   // State management
   const [toolInputs, setToolInputs] = useState<Record<string, unknown>>({})
@@ -149,11 +153,17 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
   // NETWORK UTILITIES
   // =============================================================================
 
+  const getActivePricing = useCallback((): PricingEntry[] => {
+    if (!stableTool?.isMonetized || !stableTool.pricing?.length) return []
+    return (stableTool.pricing as PricingEntry[]).filter(p => p.active === true)
+  }, [stableTool])
+
   const getRequiredNetwork = useCallback((): string | null => {
-    if (!stableTool?.isMonetized || !stableTool.payments.length) return null
-    const selectedPricing = stableTool.payments[selectedPricingTier] || stableTool.payments[0]
+    const activePricing = getActivePricing()
+    if (!activePricing.length) return null
+    const selectedPricing = activePricing[selectedPricingTier] || activePricing[0]
     return selectedPricing.network
-  }, [stableTool, selectedPricingTier])
+  }, [getActivePricing, selectedPricingTier])
 
   const getCurrentNetwork = useCallback((): string | null => {
     const network = chainId ? getNetworkByChainId(chainId) : undefined
@@ -173,11 +183,12 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
   }, [getRequiredNetwork, getCurrentNetwork, activeWallet?.walletType])
 
   const shouldShowNetworkStatus = useCallback((): boolean => {
-    if (!tool?.isMonetized || !tool.payments?.length || !isConnected) {
+    const activePricing = getActivePricing()
+    if (!activePricing.length || !isConnected) {
       return false
     }
     return isOnCorrectNetwork()
-  }, [tool, isConnected, isOnCorrectNetwork])
+  }, [getActivePricing, isConnected, isOnCorrectNetwork])
 
   const handleNetworkSwitch = async () => {
     const requiredNetwork = getRequiredNetwork()
@@ -217,6 +228,14 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
       setIsSwitchingNetwork(false)
     }
   }
+
+  // Reset pricing tier when active pricing changes
+  useEffect(() => {
+    const activePricing = getActivePricing()
+    if (selectedPricingTier >= activePricing.length) {
+      setSelectedPricingTier(0)
+    }
+  }, [getActivePricing, selectedPricingTier])
 
   // =============================================================================
   // CURRENCY AND TOKEN UTILITIES
@@ -830,7 +849,9 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
   // =============================================================================
 
   const renderPricingSection = () => {
-    if (!stableTool?.isMonetized || !stableTool.payments.length) {
+    const activePricing = getActivePricing()
+    
+    if (!stableTool?.isMonetized || !activePricing.length) {
       return (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
@@ -844,9 +865,11 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
       )
     }
 
-    const selectedPricing = stableTool.payments[selectedPricingTier] || stableTool.payments[0]
-    const amount = parseFloat(selectedPricing.amountRaw) / Math.pow(10, selectedPricing.tokenDecimals)
-    const hasMultipleTiers = stableTool.payments.length > 1
+    const selectedPricing = activePricing[selectedPricingTier] || activePricing[0]
+    const amount = parseFloat(selectedPricing?.maxAmountRequiredRaw || '0') / Math.pow(10, selectedPricing?.tokenDecimals || 0)
+    const hasMultipleTiers = activePricing.length > 1
+
+    console.log("selectedPricing", selectedPricing)
 
     return (
       <div className="space-y-2">
@@ -857,20 +880,20 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
         <div className="ml-6">
           <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30">
             <div className="flex items-center gap-2">
-              <span className="font-medium text-sm">{formatCurrency(amount, selectedPricing.currency, selectedPricing.network)}</span>
-              <span className="text-gray-600 dark:text-gray-400 text-sm">on {selectedPricing.network}</span>
+              <span className="font-medium text-sm">{formatCurrency(amount, selectedPricing?.assetAddress || '', selectedPricing?.network || '')}</span>
+              <span className="text-gray-600 dark:text-gray-400 text-sm">on {selectedPricing?.network}</span>
             </div>
             
             {hasMultipleTiers && (
               <Popover open={pricingPopoverOpen} onOpenChange={setPricingPopoverOpen}>
-                <PopoverTrigger asChild>
+                                  <PopoverTrigger asChild>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     className="text-xs"
                   >
-                    {stableTool.payments.length} Options
+                    {activePricing.length} Options
                     <ChevronDown className="h-3 w-3 ml-1" />
                   </Button>
                 </PopoverTrigger>
@@ -878,11 +901,11 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
                   <div className="p-4">
                     <h5 className="text-sm font-medium mb-3">Select Pricing Tier</h5>
                     <div className="space-y-2">
-                      {stableTool.payments.map((payment, index) => {
-                        const tierAmount = parseFloat(payment.amountRaw) / Math.pow(10, payment.tokenDecimals)
+                      {activePricing.map((pricing, index) => {
+                        const tierAmount = parseFloat(pricing.maxAmountRequiredRaw) / Math.pow(10, pricing.tokenDecimals)
                         return (
                           <div
-                            key={index}
+                            key={pricing.id}
                             onClick={() => {
                               setSelectedPricingTier(index)
                               setPricingPopoverOpen(false)
@@ -897,9 +920,9 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
                               <div className="space-y-1">
                                                                  <div className="flex items-center gap-2">
                                    <span className="font-medium text-sm">
-                                     {formatCurrency(tierAmount, payment.currency, payment.network)}
+                                     {formatCurrency(tierAmount, pricing.assetAddress, pricing.network)}
                                    </span>
-                                   <span className="text-xs text-gray-500">on {payment.network}</span>
+                                   <span className="text-xs text-gray-500">on {pricing.network}</span>
                                  </div>
                               </div>
                               {selectedPricingTier === index && (
@@ -1030,14 +1053,15 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
   }
 
   const renderPaymentPreview = () => {
-    if (!stableTool?.isMonetized || !stableTool.payments.length || !isConnected) return null
+    const activePricing = getActivePricing()
+    if (!stableTool?.isMonetized || !activePricing.length || !isConnected) return null
     
-    const selectedPricing = stableTool.payments[selectedPricingTier] || stableTool.payments[0]
-    const amount = parseFloat(selectedPricing.amountRaw) / Math.pow(10, selectedPricing.tokenDecimals)
+    const selectedPricing = activePricing[selectedPricingTier] || activePricing[0]
+    const amount = parseFloat(selectedPricing.maxAmountRequiredRaw) / Math.pow(10, selectedPricing.tokenDecimals)
 
     return (
       <div className="text-center text-sm text-gray-600 dark:text-gray-400 py-2">
-        You&apos;ll be charged <span className="font-medium">{formatCurrency(amount, selectedPricing.currency, selectedPricing.network)}</span> via{" "}
+        You&apos;ll be charged <span className="font-medium">{formatCurrency(amount, selectedPricing.assetAddress, selectedPricing.network)}</span> via{" "}
         <span className="font-medium">{activeWallet?.provider || 'your wallet'}</span>
       </div>
     )
@@ -1157,7 +1181,8 @@ export function ToolExecutionModal({ isOpen, onClose, tool, serverId }: ToolExec
   }
 
   const renderNetworkSwitchPrompt = () => {
-    if (!stableTool?.isMonetized || !stableTool.payments.length || !isConnected || isOnCorrectNetwork()) {
+    const activePricing = getActivePricing()
+    if (!stableTool?.isMonetized || !activePricing.length || !isConnected || isOnCorrectNetwork()) {
       return null
     }
 
