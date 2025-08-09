@@ -18,6 +18,9 @@ export const auth = betterAuth({
       verification: schema.verification,
     },
   }),
+  emailAndPassword: {
+    enabled: true,
+  },
   socialProviders: {
     github: {
       clientId: getGitHubConfig().clientId,
