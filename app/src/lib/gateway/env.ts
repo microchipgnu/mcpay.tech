@@ -1,23 +1,35 @@
 import { z } from 'zod';
 
+// Helper to parse boolean-like env vars from strings
+const booleanFromEnv = z.preprocess((val) => {
+  if (typeof val === 'string') {
+    const v = val.trim().toLowerCase();
+    if (['false', '0', 'no', 'off'].includes(v)) return false;
+    if (['true', '1', 'yes', 'on'].includes(v)) return true;
+  }
+  return val;
+}, z.boolean());
+
 // Define the schema for environment variables
 const envSchema = z.object({
   // Node.js environment
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
   // Database
-  DATABASE_URL: z.string().url('DATABASE_URL must be a valid URL'),
+  DATABASE_URL: z.url('DATABASE_URL must be a valid URL'),
 
   // Authentication
   BETTER_AUTH_SECRET: z.string().min(1, 'BETTER_AUTH_SECRET is required'),  
   GITHUB_CLIENT_ID: z.string().min(1, 'GITHUB_CLIENT_ID is required'),
   GITHUB_CLIENT_SECRET: z.string().min(1, 'GITHUB_CLIENT_SECRET is required'),
+  // Auth feature flags
+  AUTH_CREATE_CDP_ON_SIGNUP: booleanFromEnv.default(true),
 
   // Facilitator Configuration
   FACILITATOR_EVM_PRIVATE_KEY: z.string().optional(),
-  FACILITATOR_URL: z.string().url().default('https://x402.org/facilitator'),
-  BASE_SEPOLIA_FACILITATOR_URL: z.string().url().default('https://x402.org/facilitator'),
-  SEI_TESTNET_FACILITATOR_URL: z.string().url().default('https://6y3cdqj5s3.execute-api.us-west-2.amazonaws.com/prod'),
+  FACILITATOR_URL: z.url().default('https://x402.org/facilitator'),
+  BASE_SEPOLIA_FACILITATOR_URL: z.url().default('https://x402.org/facilitator'),
+  SEI_TESTNET_FACILITATOR_URL: z.url().default('https://6y3cdqj5s3.execute-api.us-west-2.amazonaws.com/prod'),
 
   // CDP Configuration
   CDP_API_KEY: z.string().min(1, 'CDP_API_KEY is required'),
@@ -25,7 +37,7 @@ const envSchema = z.object({
   CDP_WALLET_SECRET: z.string().min(1, 'CDP_WALLET_SECRET is required'),
 
   // Vercel KV Configuration
-  KV_REST_API_URL: z.string().url('KV_REST_API_URL must be a valid URL'),
+  KV_REST_API_URL: z.url('KV_REST_API_URL must be a valid URL'),
   KV_REST_API_TOKEN: z.string().min(1, 'KV_REST_API_TOKEN is required'),
 
   // Payment strategy configuration
@@ -121,6 +133,9 @@ export const getKVConfig = () => ({
   restApiUrl: env.KV_REST_API_URL,
   restApiToken: env.KV_REST_API_TOKEN,
 });
+
+// Helper for auth feature flags
+export const shouldCreateCDPOnSignUp = (): boolean => env.AUTH_CREATE_CDP_ON_SIGNUP;
 
 // Helper for facilitator private key (with validation)
 export const getFacilitatorPrivateKey = (): string => {

@@ -1,6 +1,6 @@
 import db from "@/lib/gateway/db";
 import * as schema from "@/lib/gateway/db/schema";
-import { getGitHubConfig } from "@/lib/gateway/env";
+import { getGitHubConfig, shouldCreateCDPOnSignUp } from "@/lib/gateway/env";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAuthMiddleware } from "better-auth/api";
@@ -86,13 +86,13 @@ export const auth = betterAuth({
         sessionId: newSession.session.id
       });
 
-      // Always attempt to create CDP wallet - let the function handle existing wallet logic
-      // This is robust because:
-      // 1. New users will get wallets created
-      // 2. Existing users without wallets will get them
-      // 3. Users with wallets will be skipped (no-op)
       setImmediate(async () => {
         try {
+          if (!shouldCreateCDPOnSignUp()) {
+            console.log(`[AUTH HOOK] Skipping CDP wallet creation for newly signed up user ${user.id} due to AUTH_CREATE_CDP_ON_SIGNUP=false`);
+            return;
+          }
+
           console.log(`[AUTH HOOK] Attempting CDP wallet creation for user ${user.id}`);
           
           const result = await withTransaction(async (tx) => {

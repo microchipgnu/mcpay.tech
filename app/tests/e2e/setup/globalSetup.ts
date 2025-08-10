@@ -69,29 +69,27 @@ export default async (_cfg: FullConfig) => {
         BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET || 'test_secret',
         GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID || 'fake',
         GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET || 'fake',
+        AUTH_CREATE_CDP_ON_SIGNUP: false,
         CDP_API_KEY: process.env.CDP_API_KEY || 'fake',
         CDP_API_SECRET: process.env.CDP_API_SECRET || 'fake',
         CDP_WALLET_SECRET: process.env.CDP_WALLET_SECRET || 'fake',
         KV_REST_API_URL: process.env.KV_REST_API_URL || 'https://kv.local',
         KV_REST_API_TOKEN: process.env.KV_REST_API_TOKEN || 'fake',
         FACILITATOR_URL: `http://localhost:${facilitatorPort}`,
+        TEST_ACCOUNT_PRIVATE_KEY: process.env.TEST_ACCOUNT_PRIVATE_KEY || '0x1234567890abcdef...',
+        TEST_ACCOUNT_ADDRESS: process.env.TEST_ACCOUNT_ADDRESS || '0x1234567890abcdef...',
     } as NodeJS.ProcessEnv;
 
     console.log("ENV", envCommon);
 
-    // Migrate + seed using the same env
+    // Migrate using the same env (seed now handled via fixtures)
     await run('node', ['scripts/drizzle-migrate.cjs'], envCommon);
-    await run('tsx', ['scripts/seed.ts'], envCommon);
 
-    const port1 = mcpayPort;
     const nextBin = path.join(process.cwd(), 'node_modules', '.bin', 'next');
     // Build once to ensure production server can start
     await run(nextBin, ['build'], envCommon);
-    appProc1 = spawn(nextBin, ['start', '-p', String(port1)], { env: { ...envCommon }, stdio: 'inherit' });
+    appProc1 = spawn(nextBin, ['start', '-p', String(mcpayPort)], { env: { ...envCommon }, stdio: 'inherit' });
 
-
-    console.log("MCP PORT", mcpPort);
-    console.log("FACILITATOR PORT", facilitatorPort);
     mcpServer = await startFakeMcp(mcpPort, `http://localhost:${mcpayPort}`);
     mcpServer2 = await startFakeMcp(mcpPort2, `http://localhost:${mcpayPort}`);
     facilitator = await startFakeFacilitator(facilitatorPort);
@@ -104,6 +102,8 @@ export default async (_cfg: FullConfig) => {
     process.env.MCP_FAKE_ORIGIN_2 = `http://localhost:${mcpPort2}/mcp`;
     process.env.BASE_SEPOLIA_FACILITATOR_URL = `http://localhost:${facilitatorPort}/base-sepolia`;
     process.env.SEI_TESTNET_FACILITATOR_URL = `http://localhost:${facilitatorPort}/sei-testnet`;
+    process.env.TEST_ACCOUNT_PRIVATE_KEY = process.env.TEST_ACCOUNT_PRIVATE_KEY || '0x1234567890abcdef...';
+    process.env.TEST_ACCOUNT_ADDRESS = process.env.TEST_ACCOUNT_ADDRESS || '0x1234567890abcdef...';
 };
 
 export async function teardown() {

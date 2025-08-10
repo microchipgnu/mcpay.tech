@@ -5,7 +5,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 // Use dynamic base URL provided by globalSetup
 test.use({ baseURL: process.env.PW_BASE_URL });
 
-test("connect to fake mcp", async ({ request }) => {
+test("connect to mcp", async ({ request }) => {
   const client = await experimental_createMCPClient({
     transport: new StreamableHTTPClientTransport(new URL(process.env.MCP_FAKE_ORIGIN || ''))
   })
