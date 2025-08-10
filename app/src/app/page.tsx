@@ -23,6 +23,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
+import Hero from "@/components/custom-ui/hero"
 
 // API response types
 interface APITool {
@@ -154,7 +155,7 @@ export default function MCPBrowser() {
   const [analyticsError, setAnalyticsError] = useState<string | null>(null)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMoreServers, setHasMoreServers] = useState(true)
-  
+
   const { isDark, toggleTheme } = useTheme()
 
   // Helper function to get user-friendly error messages
@@ -168,7 +169,7 @@ export default function MCPBrowser() {
         showRetry: false
       }
     }
-    
+
     if (error.includes('500') || error.includes('502') || error.includes('503')) {
       return {
         title: "Server maintenance",
@@ -178,7 +179,7 @@ export default function MCPBrowser() {
         showRetry: true
       }
     }
-    
+
     if (error.includes('Network') || error.includes('fetch')) {
       return {
         title: "Connection issue",
@@ -188,7 +189,7 @@ export default function MCPBrowser() {
         showRetry: true
       }
     }
-    
+
     // Generic error fallback
     return {
       title: "Something went wrong",
@@ -250,7 +251,7 @@ export default function MCPBrowser() {
     try {
       const currentOffset = mcpServers.length
       const serversResponse = await fetch(urlUtils.getApiUrl(`/servers?limit=9&offset=${currentOffset}&type=trending`))
-      
+
       if (!serversResponse.ok) {
         throw new Error(`Failed to fetch more servers: ${serversResponse.status}`)
       }
@@ -401,7 +402,7 @@ export default function MCPBrowser() {
   // Error state
   if (error) {
     const errorInfo = getFriendlyErrorMessage(error)
-    
+
     return (
       <div className={`min-h-screen ${isDark ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" : "bg-gradient-to-br from-gray-50 via-white to-gray-100"}`}>
         {/* Subtle background gradient */}
@@ -436,9 +437,9 @@ export default function MCPBrowser() {
               )}
 
               {errorInfo.showRetry && (
-                <Button 
-                  onClick={() => window.location.reload()} 
-                  size="lg" 
+                <Button
+                  onClick={() => window.location.reload()}
+                  size="lg"
                   variant="outline"
                   className="hover:bg-blue-50 dark:hover:bg-blue-900/20"
                 >
@@ -500,42 +501,10 @@ export default function MCPBrowser() {
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Enhanced Header */}
-        <div className="text-center mb-16 relative">
-          <div className="mb-[100px]"></div>
-          <h1 className={`text-5xl font-extrabold tracking-tight mb-6 animate-fade-in-up ${isDark ? "text-white" : "text-gray-900"}`}>
-            Monetize your MCP server in <span className="text-[#0052FF]">one&nbsp;click.</span>
-          </h1>
 
-          <p className={`text-lg max-w-3xl mx-auto leading-relaxed animate-fade-in-up animation-delay-300 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
-            Serve, price & settle with on-chain USDC via <a href="https://x402.org" className="underline hover:text-[#00D8FF] transition-colors" target="_blank" rel="noopener noreferrer">x402</a>.
-          </p>
-
-          <div className="flex items-center justify-center gap-6 mt-8 animate-fade-in-up animation-delay-500">
-            <Link href="/register">
-              <Button
-                size="lg"
-                className="bg-[#0052FF] hover:bg-[#0052FF]/90 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                <Rocket className="h-5 w-5 mr-2" />
-                Monetize your server
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </Link>
-
-            <button
-              className="text-sm underline hover:text-[#0052FF] transition-colors cursor-pointer"
-              onClick={() => {
-                // Scroll to servers section
-                document.querySelector('#servers-section')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-            >
-              Discover MCP servers
-            </button>
-          </div>
-
-        </div>
-
+        <section className="mb-16">
+          <Hero />
+        </section>
         {/* Enhanced Platform Stats */}
         <div className="mb-16">
           {analyticsLoading ? (
