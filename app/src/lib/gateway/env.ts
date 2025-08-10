@@ -1,15 +1,5 @@
 import { z } from 'zod';
 
-// Helper to parse boolean-like env vars from strings
-const booleanFromEnv = z.preprocess((val) => {
-  if (typeof val === 'string') {
-    const v = val.trim().toLowerCase();
-    if (['false', '0', 'no', 'off'].includes(v)) return false;
-    if (['true', '1', 'yes', 'on'].includes(v)) return true;
-  }
-  return val;
-}, z.boolean());
-
 // Define the schema for environment variables
 const envSchema = z.object({
   // Node.js environment
@@ -22,8 +12,6 @@ const envSchema = z.object({
   BETTER_AUTH_SECRET: z.string().min(1, 'BETTER_AUTH_SECRET is required'),  
   GITHUB_CLIENT_ID: z.string().min(1, 'GITHUB_CLIENT_ID is required'),
   GITHUB_CLIENT_SECRET: z.string().min(1, 'GITHUB_CLIENT_SECRET is required'),
-  // Auth feature flags
-  AUTH_CREATE_CDP_ON_SIGNUP: booleanFromEnv.default(true),
 
   // Facilitator Configuration
   FACILITATOR_EVM_PRIVATE_KEY: z.string().optional(),
@@ -51,6 +39,15 @@ const envSchema = z.object({
   CDP_STRATEGY_PRIORITY: z.number().min(0).max(1000).default(100),
   PAYMENT_STRATEGY_LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
   PAYMENT_STRATEGY_LOG_AUTH_DETAILS: z.boolean().default(false),
+
+  // Test strategy optional overrides (per-network)
+  // Architecture-level test signers
+  TEST_EVM_PRIVATE_KEY: z.string().optional(),
+  TEST_EVM_ADDRESS: z.string().optional(),
+  TEST_SOLANA_SECRET_KEY: z.string().optional(),
+  TEST_SOLANA_ADDRESS: z.string().optional(),
+  TEST_NEAR_PRIVATE_KEY: z.string().optional(),
+  TEST_NEAR_ADDRESS: z.string().optional(),
 
   // Port configuration
   PORT: z.string().default('3000').transform((val) => parseInt(val, 10)),
@@ -134,8 +131,7 @@ export const getKVConfig = () => ({
   restApiToken: env.KV_REST_API_TOKEN,
 });
 
-// Helper for auth feature flags
-export const shouldCreateCDPOnSignUp = (): boolean => env.AUTH_CREATE_CDP_ON_SIGNUP;
+export const isTestEnv = () => env.NODE_ENV === 'test';
 
 // Helper for facilitator private key (with validation)
 export const getFacilitatorPrivateKey = (): string => {

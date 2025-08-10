@@ -184,6 +184,24 @@ app.get('/servers', optionalAuthMiddleware, async (c) => {
     }
 })
 
+// Find a server by exact mcpOrigin (useful for idempotent client flows)
+app.get('/servers/find', async (c) => {
+    const mcpOrigin = c.req.query('mcpOrigin');
+    if (!mcpOrigin) {
+        return c.json({ error: 'mcpOrigin is required' }, 400);
+    }
+
+    const server = await withTransaction(async (tx) => {
+        return await txOperations.getMcpServerByOrigin(mcpOrigin)(tx);
+    });
+
+    if (!server) {
+        return c.json({ error: 'Server not found' }, 404);
+    }
+
+    return c.json(server);
+})
+
 app.get('/servers/:id', async (c) => {
     const serverId = c.req.param('id')
 
@@ -212,6 +230,42 @@ app.get('/servers/:id', async (c) => {
     } catch (error) {
         console.error('Error fetching server:', error)
         return c.json({ error: 'Internal server error' }, 500)
+    }
+})
+
+app.delete('/servers/:id', authMiddleware, async (c) => {
+    const serverId = c.req.param('id')
+    const user = c.get('requireUser')()
+
+    try {
+        const server = await withTransaction(async (tx) => {
+            const server = await txOperations.internal_getMcpServerByServerId(serverId)(tx);
+            if (!server) {
+                return null;
+            }
+            
+            // Check if user is the creator
+            if (server.ownership.find((o) => o.role === 'owner' && o.active) === undefined) {
+                throw new Error('Forbidden - You are not an owner of this server');
+            }
+
+            await txOperations.deleteServer(serverId)(tx);
+            return server;
+        });
+
+        if (!server) {
+            return c.json({ error: 'Server not found' }, 404);
+        }
+
+        return c.json({ message: 'Server deleted successfully' }, 200);
+    } catch (error) {
+        console.error('Error deleting server:', error);
+
+        if (error instanceof Error && error.message.includes('Forbidden')) {
+            return c.json({ error: 'Forbidden - You can only delete servers you created' }, 403);
+        }
+
+        return c.json({ error: 'Internal server error' }, 500);
     }
 })
 
@@ -254,6 +308,14 @@ app.get('/servers/:id/registration', authMiddleware, async (c) => {
 app.post('/servers', authMiddleware, async (c) => {
     try {
         const data = await c.req.json() as CreateServerForAuthenticatedUserInput
+
+        // Idempotency: if a server with this origin already exists, return it
+        const existing = await withTransaction(async (tx) => {
+            return await txOperations.getMcpServerByOrigin(data.mcpOrigin)(tx);
+        });
+        if (existing) {
+            return c.json(existing, 200);
+        }
 
         const id = randomUUID()
 

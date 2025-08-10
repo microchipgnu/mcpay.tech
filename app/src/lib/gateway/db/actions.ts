@@ -135,6 +135,10 @@ export const txOperations = {
         return server[0];
     },
 
+    deleteServer: (serverId: string) => async (tx: TransactionType) => {
+        await tx.delete(mcpServers).where(eq(mcpServers.serverId, serverId));
+    },
+
     // Upsert server by origin - truly atomic operation using Drizzle's onConflictDoUpdate
     upsertServerByOrigin: (data: {
         serverId: string;
@@ -376,6 +380,16 @@ export const txOperations = {
                 status: true,
                 createdAt: true,
                 updatedAt: true
+            },
+            with: {
+                ownership: {
+                    columns: {
+                        id: true,
+                        role: true,
+                        createdAt: true,
+                        active: true
+                    }
+                }
             }
         });
     },

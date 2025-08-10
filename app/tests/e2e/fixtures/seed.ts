@@ -1,6 +1,6 @@
 import { test as authTest, expect } from './auth';
 
-type SeededServer = { id: string; serverId: string; mcpOrigin: string };
+type SeededServer = { id: string; serverId: string };
 
 export const test = authTest.extend<{ seededServer: SeededServer }>({
   seededServer: async ({ authed, baseURL }, use) => {
@@ -14,39 +14,63 @@ export const test = authTest.extend<{ seededServer: SeededServer }>({
     }
 
     const payload = {
-      mcpOrigin: origin,
+      mcpOrigin: `${origin}?random=${Math.random().toString(36).slice(2)}`,
       receiverAddress: '0x0000000000000000000000000000000000000001',
       requireAuth: false,
       name: 'Fake MCP',
       description: 'Test server',
-      tools: [{ name: 'myTool' }],
+      tools: [{ 
+        name: 'myTool', 
+        pricing: [{ 
+          id: '1',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          maxAmountRequiredRaw: '100', // 0.0001 USDC
+          tokenDecimals: 6, 
+          network: 'base-sepolia', 
+          assetAddress: '0x036CbD53842c5426634e7929541eC2318f3dCF7e', 
+          active: true 
+        }] 
+      }],
     };
 
     let server: SeededServer | undefined = undefined;
 
+    // First: check if server already exists (idempotent)
     try {
-      const res = await authed.post('/api/servers', { data: payload });
-      if (res.status() === 201) {
-        const created = await res.json();
-        if (created?.serverId) {
-          server = { id: created.id, serverId: created.serverId, mcpOrigin: created.mcpOrigin };
+      const byOrigin = await authed.get('/api/servers/find?mcpOrigin=' + encodeURIComponent(payload.mcpOrigin));
+      if (byOrigin.ok()) {
+        const s = await byOrigin.json();
+        if (s?.serverId) {
+          server = { id: s.id, serverId: s.serverId };
         }
       }
     } catch {}
 
+    // If not found, attempt to create
     if (!server) {
-      const list = await authed.get('/api/servers?type=list&limit=50&offset=0');
-      if (list.ok()) {
-        try {
-          const servers = await list.json();
-          const match = Array.isArray(servers)
-            ? servers.find((s: any) => s.mcpOrigin === origin)
-            : undefined;
-          if (match) {
-            server = { id: match.id, serverId: match.serverId, mcpOrigin: match.mcpOrigin };
+      try {
+        const res = await authed.post('/api/servers', { data: payload });
+        if (res.ok()) {
+          const created = await res.json();
+          if (created?.serverId) {
+            server = { id: created.id, serverId: created.serverId };
           }
-        } catch {}
-      }
+        }
+      } catch {}
+    }
+
+    // Final fallback: re-check by origin
+    if (!server) {
+      try {
+        const byOrigin = await authed.get('/api/servers/find?mcpOrigin=' + encodeURIComponent(payload.mcpOrigin));
+        if (byOrigin.ok()) {
+          const s = await byOrigin.json();
+          if (s?.serverId) {
+            server = { id: s.id, serverId: s.serverId };
+          }
+        }
+      } catch {}
     }
 
     if (!server) {
@@ -54,6 +78,9 @@ export const test = authTest.extend<{ seededServer: SeededServer }>({
     }
 
     await use(server);
+
+    // Delete using serverId (API currently deletes by serverId, not DB id)
+    // await authed.delete(`/api/servers/${server.serverId}`);
   },
 });
 

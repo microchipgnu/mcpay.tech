@@ -5,8 +5,8 @@ function cookieFromSetCookieHeaders(setCookieHeaders: string[]): string {
   return setCookieHeaders.map((h) => h.split(';')[0]).join('; ');
 }
 
-export const test = base.extend<{ authed: APIRequestContext; user: { email: string; id?: string } }>({
-  authed: async ({ baseURL }, use) => {
+export const test = base.extend<{ sessionCookie: string; authed: APIRequestContext }>({
+  sessionCookie: async ({ baseURL }, use) => {
     const anon = await request.newContext({ baseURL });
     const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`;
     const password = 'Passw0rd!234';
@@ -20,27 +20,22 @@ export const test = base.extend<{ authed: APIRequestContext; user: { email: stri
     const setCookies = signIn.headersArray().filter(h => h.name.toLowerCase() === 'set-cookie').map(h => h.value);
     const cookie = cookieFromSetCookieHeaders(setCookies);
 
+    await use(cookie);
+    await anon.dispose();
+  },
+  authed: async ({ baseURL, sessionCookie }, use) => {
     // Create authed context with session cookies
-    const authed = await request.newContext({ baseURL, extraHTTPHeaders: { cookie } });
+    const authed = await request.newContext({ baseURL, extraHTTPHeaders: { cookie: sessionCookie } });
 
-    // Optionally resolve user ID
+    // Optionally resolve user session
     try {
       const sessionRes = await authed.get('/api/auth/get-session');
-      if (sessionRes.ok()) {
-        const session = await sessionRes.json();
-        (authed as any)._user = { email, id: session?.user?.id };
-      }
+      expect(sessionRes.ok()).toBeTruthy();
     } catch {}
 
     await use(authed);
 
     await authed.dispose();
-    await anon.dispose();
-  },
-
-  user: async ({ authed }, use) => {
-    const userVal = (authed as any)?._user || { email: '' };
-    await use(userVal);
   },
 });
 

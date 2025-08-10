@@ -1,12 +1,12 @@
 import db from "@/lib/gateway/db";
+import { txOperations, withTransaction } from "@/lib/gateway/db/actions";
 import * as schema from "@/lib/gateway/db/schema";
-import { getGitHubConfig, shouldCreateCDPOnSignUp } from "@/lib/gateway/env";
+import { getGitHubConfig, isTestEnv } from "@/lib/gateway/env";
+import { CDPWalletMetadata } from "@/types";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAuthMiddleware } from "better-auth/api";
 import { randomUUID } from "crypto";
-import { txOperations, withTransaction } from "@/lib/gateway/db/actions";
-import { CDPWalletMetadata } from "@/types";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -88,8 +88,9 @@ export const auth = betterAuth({
 
       setImmediate(async () => {
         try {
-          if (!shouldCreateCDPOnSignUp()) {
-            console.log(`[AUTH HOOK] Skipping CDP wallet creation for newly signed up user ${user.id} due to AUTH_CREATE_CDP_ON_SIGNUP=false`);
+
+          if (isTestEnv()) {
+            console.log(`[AUTH HOOK] Skipping CDP wallet creation for test user ${user.id} due to isTestEnv()`);
             return;
           }
 

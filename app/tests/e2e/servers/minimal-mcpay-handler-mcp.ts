@@ -1,13 +1,13 @@
 import { Hono } from 'hono';
-import { createMcpHandler } from 'mcp-handler';
+import { createPaidMcpHandler } from 'mcpay/handler';
 import { serve } from "@hono/node-server"
 import { z } from 'zod';
 
-export async function startFakeMcp(port: number) {
+export async function startFakeMcp(port: number, mcpayApiUrl: string) {
   const app = new Hono();
 
   // Create paid MCP handler with ping disabled for tests
-  const handler = createMcpHandler(async (server) => {
+  const handler = createPaidMcpHandler(async (server) => {
     // Match seed: serverId "test-server" has tool "myTool"
     server.tool(
       "myTool",
@@ -18,6 +18,11 @@ export async function startFakeMcp(port: number) {
         };
       }
     );
+  }, {
+    mcpay: {
+      mcpayApiUrl: mcpayApiUrl,
+    },
+    ping: { enabled: false },
   });
 
   // Friendly homepage for browser visitors

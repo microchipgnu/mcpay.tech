@@ -5,7 +5,7 @@
  * It allows for easy customization of behavior without code changes.
  */
 
-import env from "@/lib/gateway/env";
+import env, { isTest } from "@/lib/gateway/env";
 import { getCDPNetworks, type UnifiedNetwork } from "@/lib/commons/networks";
 
 export interface PaymentStrategyConfig {
@@ -31,6 +31,24 @@ export interface PaymentStrategyConfig {
             priority: number;
             networks: UnifiedNetwork[];
         };
+        test: {
+            enabled: boolean;
+            priority: number;
+            networks: UnifiedNetwork[];
+            // Architecture-level defaults for tests
+            evm?: {
+                privateKey?: `0x${string}`;
+                address?: `0x${string}`;
+            };
+            solana?: {
+                secretKey?: string;
+                address?: string;
+            };
+            near?: {
+                privateKey?: string;
+                address?: string;
+            };
+        }
     };
     logging: {
         level: 'debug' | 'info' | 'warn' | 'error';
@@ -48,11 +66,16 @@ export const DEFAULT_CONFIG: PaymentStrategyConfig = {
     timeoutMs: 30000, // 30 seconds
     strategies: {
         cdp: {
-            enabled: true,
+            enabled: !isTest(),
             priority: 100,
             preferSmartAccounts: true,
             networks: getCDPNetworks(), // Use unified network system
             maxWalletsToTry: 5
+        },
+        test: {
+            enabled: isTest(),
+            priority: 1000,
+            networks: ['base-sepolia', 'sei-testnet'] as UnifiedNetwork[],
         },
         privy: {
             enabled: false, // Not implemented yet
@@ -78,7 +101,7 @@ export function getPaymentStrategyConfig(): PaymentStrategyConfig {
     const config = { ...DEFAULT_CONFIG };
     
     // Allow overriding via environment variables
-    if (!env.PAYMENT_STRATEGY_ENABLED) {
+    if (typeof env.PAYMENT_STRATEGY_ENABLED === 'boolean') {
         config.enabled = env.PAYMENT_STRATEGY_ENABLED;
     }
     
@@ -103,9 +126,33 @@ export function getPaymentStrategyConfig(): PaymentStrategyConfig {
         }
     }
     
-    // CDP specific configuration
-    if (!env.CDP_STRATEGY_ENABLED) {
+    // In test env, force only testing strategy and disable others
+    if (isTest()) {
         config.strategies.cdp.enabled = false;
+        config.strategies.privy.enabled = false;
+        config.strategies.magic.enabled = false;
+        config.strategies.test.enabled = true;
+        config.fallbackBehavior = 'fail';
+        config.maxRetries = 1;
+
+        // Architecture-level defaults (EVM + Solana/NEAR)
+        config.strategies.test.evm = {
+            privateKey: (env.TEST_EVM_PRIVATE_KEY as `0x${string}` | undefined) ?? undefined,
+            address: env.TEST_EVM_ADDRESS as `0x${string}` | undefined,
+        };
+        config.strategies.test.solana = {
+            secretKey: env.TEST_SOLANA_SECRET_KEY,
+            address: env.TEST_SOLANA_ADDRESS,
+        };
+        config.strategies.test.near = {
+            privateKey: env.TEST_NEAR_PRIVATE_KEY,
+            address: env.TEST_NEAR_ADDRESS,
+        };
+    } else {
+        // CDP specific configuration
+        if (typeof env.CDP_STRATEGY_ENABLED === 'boolean') {
+            config.strategies.cdp.enabled = env.CDP_STRATEGY_ENABLED;
+        }
     }
     
     if (env.CDP_STRATEGY_PRIORITY) {
