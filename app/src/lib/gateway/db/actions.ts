@@ -1090,24 +1090,49 @@ export const txOperations = {
         // Determine architecture if not provided
         const architecture = data.architecture || getBlockchainArchitecture(data.blockchain);
 
-        // Create new wallet record
-        const result = await tx.insert(userWallets).values({
-            userId: data.userId,
-            walletAddress: data.walletAddress,
-            walletType: data.walletType,
-            provider: data.provider,
-            blockchain: data.blockchain,
-            architecture,
-            isPrimary: data.isPrimary || false,
-            walletMetadata: data.walletMetadata,
-            externalWalletId: data.externalWalletId,
-            externalUserId: data.externalUserId,
-            createdAt: new Date(),
-            updatedAt: new Date()
-        }).returning();
+        // Create new wallet record (race-safe on primary uniqueness)
+        try {
+            const result = await tx.insert(userWallets).values({
+                userId: data.userId,
+                walletAddress: data.walletAddress,
+                walletType: data.walletType,
+                provider: data.provider,
+                blockchain: data.blockchain,
+                architecture,
+                isPrimary: data.isPrimary || false,
+                walletMetadata: data.walletMetadata,
+                externalWalletId: data.externalWalletId,
+                externalUserId: data.externalUserId,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            }).returning();
 
-        if (!result[0]) throw new Error("Failed to add wallet to user");
-        return result[0];
+            if (!result[0]) throw new Error("Failed to add wallet to user");
+            return result[0];
+        } catch (e: unknown) {
+            const err = e as { code?: string; constraint?: string; message?: string };
+            const isPrimaryUnique = err?.code === '23505' && (err?.constraint?.includes('user_wallets_primary_unique') || err?.message?.includes('user_wallets_primary_unique'));
+            if (!isPrimaryUnique) throw e;
+
+            // Another concurrent insert won the primary race. Retry insert as non-primary.
+            const retry = await tx.insert(userWallets).values({
+                userId: data.userId,
+                walletAddress: data.walletAddress,
+                walletType: data.walletType,
+                provider: data.provider,
+                blockchain: data.blockchain,
+                architecture,
+                isPrimary: false,
+                walletMetadata: data.walletMetadata,
+                externalWalletId: data.externalWalletId,
+                externalUserId: data.externalUserId,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            }).returning();
+
+            if (!retry[0]) throw new Error("Failed to add wallet to user after primary conflict");
+            return retry[0];
+        }
     },
 
     getUserWallets: (userId: string, activeOnly = true) => async (tx: TransactionType) => {

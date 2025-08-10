@@ -95,8 +95,8 @@ export async function getMcpTools(url: string) {
       inputSchema: tools[toolName]?.inputSchema,
     }))
   } catch (error) {
-    console.error("Error fetching MCP tools:", error)
-    throw new Error("Failed to fetch tools from MCP server")
+    console.warn("Warning: MCP tools unavailable (returning empty set):", error)
+    return []
   }
 }
 
@@ -124,8 +124,8 @@ export async function getMcpToolsWithPayments(url: string, userWalletAddress: st
       }
     })
   } catch (error) {
-    console.error("Error fetching MCP tools with payments:", error)
-    throw new Error("Failed to fetch tools from MCP server")
+    console.warn("Warning: MCP tools with payments unavailable (returning empty set):", error)
+    return []
   }
 }
 

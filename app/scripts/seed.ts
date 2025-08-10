@@ -24,7 +24,7 @@ async function main() {
   if (existing.length === 0) {
     const [server] = await db.insert(mcpServers).values({
       serverId,
-      mcpOrigin: origin + '/mcp',
+      mcpOrigin: origin,
       receiverAddress: '0x0000000000000000000000000000000000000001',
       creatorId: user.id,
       name: 'Fake MCP',
@@ -53,19 +53,19 @@ async function main() {
     });
   }
 
-  // Ensure a wallet row for the user so auto-sign can pick it later if needed
-  const wallets = await db.select().from(userWallets).where(eq(userWallets.userId, user.id));
-  if (wallets.length === 0) {
-    await db.insert(userWallets).values({
-      userId: user.id,
-      walletAddress: '0x0000000000000000000000000000000000000002',
-      walletType: 'external',
-      provider: 'unknown',
-      blockchain: 'ethereum',
-      architecture: 'evm' as any,
-      isPrimary: true,
-    });
-  }
+  // // Ensure a wallet row for the user so auto-sign can pick it later if needed
+  // const wallets = await db.select().from(userWallets).where(eq(userWallets.userId, user.id));
+  // if (wallets.length === 0) {
+  //   await db.insert(userWallets).values({
+  //     userId: user.id,
+  //     walletAddress: '0x0000000000000000000000000000000000000002',
+  //     walletType: 'external',
+  //     provider: 'unknown',
+  //     blockchain: 'ethereum',
+  //     architecture: 'evm' as any,
+  //     isPrimary: true,
+  //   });
+  // }
 }
 
 main().then(() => process.exit(0)).catch((e) => {
