@@ -1,8 +1,5 @@
 import { test, expect } from './fixtures/mcp-client';
 
-// Use dynamic base URL provided by globalSetup
-test.use({ baseURL: process.env.PW_BASE_URL });
-
 test('get mcp tools via proxy', async ({ noAuthMcpClient }) => {
   const tools = await noAuthMcpClient.tools();
   expect(Object.keys(tools).length).toBeGreaterThan(0);

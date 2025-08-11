@@ -1,16 +1,18 @@
-import { test, expect } from './fixtures/auth';
+import { test as base, expect } from './fixtures/auth';
+import { test as servers } from './fixtures/servers';
 
-// Use dynamic base URL provided by globalSetup
-test.use({ baseURL: process.env.PW_BASE_URL });
+const test = servers.extend({});
 
-test('inspect endpoints exist', async ({ request }) => {
-  const origin = process.env.MCP_FAKE_ORIGIN || '';
+// baseURL provided by infra fixture transitively via auth fixture
+
+test('inspect endpoints exist', async ({ request, mcpFakeOrigin }) => {
+  const origin = mcpFakeOrigin;
   const tools = await request.get('/api/inspect-mcp-tools?url=' + encodeURIComponent(origin));
   expect([200, 400, 500]).toContain(tools.status());
 });
 
-test('register server with authed context', async ({ authed }) => {
-  const origin = process.env.MCP_FAKE_ORIGIN_2 || '';
+test('register server with authed context', async ({ authed, mcpFakeOrigin2 }) => {
+  const origin = mcpFakeOrigin2;
   const payload = {
     mcpOrigin: origin,
     receiverAddress: '0x0000000000000000000000000000000000000003',

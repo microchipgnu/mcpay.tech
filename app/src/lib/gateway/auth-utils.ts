@@ -88,9 +88,12 @@ export function extractApiKey(request: {
     searchParams?: URLSearchParams;
     bodyParams?: Record<string, unknown>;
 }): string | null {
+    console.log('[MCPROUTE PROXY] Extracting API key from request...');
+
     // Try headers first (highest priority)
     const headerApiKey = extractApiKeyFromHeaders(request.headers);
     if (headerApiKey) {
+        console.log('[MCPROUTE PROXY] Found API key in headers');
         return headerApiKey;
     }
     
@@ -98,6 +101,7 @@ export function extractApiKey(request: {
     if (request.searchParams) {
         const queryApiKey = extractApiKeyFromParams(request.searchParams);
         if (queryApiKey) {
+            console.log('[MCPROUTE PROXY] Found API key in query parameters');
             return queryApiKey;
         }
     }
@@ -106,10 +110,12 @@ export function extractApiKey(request: {
     if (request.bodyParams) {
         const bodyApiKey = extractApiKeyFromParams(request.bodyParams);
         if (bodyApiKey) {
+            console.log('[MCPROUTE PROXY] Found API key in body parameters');
             return bodyApiKey;
         }
     }
     
+    console.log('[MCPROUTE PROXY] No API key found in request');
     return null;
 }
 

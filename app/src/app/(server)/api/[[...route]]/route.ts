@@ -882,6 +882,8 @@ app.post('/users/:userId/wallets/managed', authMiddleware, async (c) => {
         const userId = c.req.param('userId');
         const user = c.get('requireUser')();
 
+        console.log("managed wallet request", user.id, userId);
+
         // Check if user is creating managed wallet for their own account
         if (user.id !== userId) {
             return c.json({ error: 'Forbidden - Cannot create managed wallet for another user' }, 403);

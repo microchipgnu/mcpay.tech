@@ -1,13 +1,14 @@
-import { test, expect } from '@playwright/test';
+import { test as servers, expect } from './fixtures/servers';
 import {experimental_createMCPClient} from "ai"
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
-// Use dynamic base URL provided by globalSetup
-test.use({ baseURL: process.env.PW_BASE_URL });
+const test = servers.extend({});
 
-test("connect to mcp", async ({ request }) => {
+// baseURL provided by infra fixture transitively
+
+test("connect to mcp", async ({ request, mcpFakeOrigin }) => {
   const client = await experimental_createMCPClient({
-    transport: new StreamableHTTPClientTransport(new URL(process.env.MCP_FAKE_ORIGIN || ''))
+    transport: new StreamableHTTPClientTransport(new URL(mcpFakeOrigin))
   })
 
   expect(client).toBeDefined();

@@ -353,6 +353,12 @@ async function getAuthMethod(c: Context, user: UserWithWallet | null): Promise<s
         bodyParams
     });
     
+    console.log("MCP PROXY ROUTE", {
+        apiKey,
+        searchParams,
+        bodyParams
+    })
+
     if (apiKey) {
         return 'api_key';
     }

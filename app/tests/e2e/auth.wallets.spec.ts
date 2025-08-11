@@ -1,7 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { test as infra, expect } from './fixtures/infra';
 
-// Use dynamic base URL provided by globalSetup
-test.use({ baseURL: process.env.PW_BASE_URL });
+const test = infra.extend({});
 
 function buildCookieHeaderFromSetCookie(setCookieHeaders: string[]): string {
   const pairs: string[] = [];

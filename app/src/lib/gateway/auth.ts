@@ -1,7 +1,7 @@
 import db from "@/lib/gateway/db";
 import { txOperations, withTransaction } from "@/lib/gateway/db/actions";
 import * as schema from "@/lib/gateway/db/schema";
-import { getGitHubConfig, isTestEnv } from "@/lib/gateway/env";
+import { getGitHubConfig, isTest } from "@/lib/gateway/env";
 import { CDPWalletMetadata } from "@/types";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -89,8 +89,8 @@ export const auth = betterAuth({
       setImmediate(async () => {
         try {
 
-          if (isTestEnv()) {
-            console.log(`[AUTH HOOK] Skipping CDP wallet creation for test user ${user.id} due to isTestEnv()`);
+          if (isTest()) {
+            console.log(`[AUTH HOOK] Skipping CDP wallet creation for test user ${user.id} due to isTest()`);
             return;
           }
 

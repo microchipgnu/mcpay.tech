@@ -1,17 +1,12 @@
 // @ts-nocheck
 import type { FullConfig } from '@playwright/test';
-import { GenericContainer, StartedTestContainer } from 'testcontainers';
 import { spawn, SpawnOptions } from 'node:child_process';
 import getPort from 'get-port';
 import path from 'node:path';
 import dotenv from 'dotenv';
-import { startFakeMcp } from '../servers/minimal-fake-mcp';
-import { startFakeFacilitator } from '../servers/minimal-fake-facilitator';
+import { startFakeFacilitator } from '../fixtures/fake-facilitator';
 
-let pg: StartedTestContainer, redis: StartedTestContainer;
-let appProc1: any;
-let mcpServer: { close: () => Promise<void> } | undefined;
-let mcpServer2: { close: () => Promise<void> } | undefined;
+// No global Next server; per-test servers are started in fixtures
 let facilitator: { close: () => Promise<void> } | undefined;
 
 async function run(cmd: string, args: string[], env: NodeJS.ProcessEnv) {
@@ -28,42 +23,14 @@ export default async (_cfg: FullConfig) => {
         const envPath = path.join(process.cwd(), '.env.test');
         dotenv.config({ path: envPath });
     } catch {}
-    // Start disposable Postgres and Redis
-    pg = await new GenericContainer('postgres:16')
-        .withEnvironment({
-            POSTGRES_USER: 'test',
-            POSTGRES_PASSWORD: 'test',
-            POSTGRES_DB: 'mcp_test',
-        })
-        .withExposedPorts(5432)
-        .start();
-
-    redis = await new GenericContainer('redis:7')
-        .withExposedPorts(6379)
-        .start();
-
-    const DB_URL = `postgres://test:test@${pg.getHost()}:${pg.getMappedPort(5432)}/mcp_test`;
-    const REDIS_URL = `redis://${redis.getHost()}:${redis.getMappedPort(6379)}`;
-
-    const mcpPort = await getPort();
-    const mcpPort2 = await getPort();
     const facilitatorPort = await getPort();
-    const mcpayPort = await getPort();
-
-    // Prepare common env first
-    const useRealCDP = !!(
-        process.env.CDP_API_KEY &&
-        process.env.CDP_API_SECRET &&
-        process.env.CDP_WALLET_SECRET
-    );
+    // Next.js is built once; per-test servers are started by fixtures
 
     const envCommon = {
         ...process.env,
         NODE_ENV: 'test',
-        DATABASE_URL: DB_URL,
-        REDIS_URL,
-        MCP_FAKE_ORIGIN: `http://localhost:${mcpPort}/mcp`,
-        MCP_FAKE_ORIGIN_2: `http://localhost:${mcpPort2}/mcp`,
+        // DATABASE_URL and REDIS_URL are provided per-test by fixtures
+        // MCP origins are now provided by worker-scoped fixtures
         BASE_SEPOLIA_FACILITATOR_URL: `https://x402.org/facilitator`,
         SEI_TESTNET_FACILITATOR_URL: `http://localhost:${facilitatorPort}/sei-testnet`,
         BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET || 'test_secret',
@@ -83,25 +50,12 @@ export default async (_cfg: FullConfig) => {
         TEST_NEAR_ADDRESS: process.env.TEST_NEAR_ADDRESS || '0x1234567890abcdef...',
     } as NodeJS.ProcessEnv;
 
-
-    // Migrate using the same env (seed now handled via fixtures)
-    await run('node', ['scripts/drizzle-migrate.cjs'], envCommon);
-
     const nextBin = path.join(process.cwd(), 'node_modules', '.bin', 'next');
-    // Build once to ensure production server can start
+    // Build once to ensure production servers (started by fixtures) can start
     await run(nextBin, ['build'], envCommon);
-    appProc1 = spawn(nextBin, ['start', '-p', String(mcpayPort)], { env: { ...envCommon }, stdio: 'inherit' }); // inherit
 
-    mcpServer = await startFakeMcp(mcpPort);
-    mcpServer2 = await startFakeMcp(mcpPort2);
     facilitator = await startFakeFacilitator(facilitatorPort);
 
-    // Share in process env for tests
-    process.env.PW_DB_URL = DB_URL;
-    process.env.PW_REDIS_URL = REDIS_URL;
-    process.env.PW_BASE_URL = `http://localhost:${mcpayPort}`;
-    process.env.MCP_FAKE_ORIGIN = `http://localhost:${mcpPort}/mcp`;
-    process.env.MCP_FAKE_ORIGIN_2 = `http://localhost:${mcpPort2}/mcp`;
     process.env.BASE_SEPOLIA_FACILITATOR_URL = `https://x402.org/facilitator`;
     process.env.SEI_TESTNET_FACILITATOR_URL = `http://localhost:${facilitatorPort}/sei-testnet`;
     process.env.TEST_EVM_PRIVATE_KEY = process.env.TEST_EVM_PRIVATE_KEY || '0x1234567890abcdef...';
@@ -109,15 +63,9 @@ export default async (_cfg: FullConfig) => {
 };
 
 export async function teardown() {
-    // Stop Next app first to avoid in-flight DB queries hitting closed Postgres
-    try { appProc1?.kill(); } catch {}
     // Close fake servers
-    try { await mcpServer?.close?.(); } catch {}
-    try { await mcpServer2?.close?.(); } catch {}
     try { await facilitator?.close?.(); } catch {}
-    // Stop infra containers last
-    try { await pg?.stop(); } catch {}
-    try { await redis?.stop(); } catch {}
+    // DB/Redis are managed per-test by fixtures
 }
 
 

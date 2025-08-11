@@ -131,8 +131,6 @@ export const getKVConfig = () => ({
   restApiToken: env.KV_REST_API_TOKEN,
 });
 
-export const isTestEnv = () => env.NODE_ENV === 'test';
-
 // Helper for facilitator private key (with validation)
 export const getFacilitatorPrivateKey = (): string => {
   if (!env.FACILITATOR_EVM_PRIVATE_KEY) {

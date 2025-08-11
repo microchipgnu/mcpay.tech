@@ -1,17 +1,15 @@
 import { test as authTest, expect } from './auth';
+import { test as serversTest } from './servers';
 
 type SeededServer = { id: string; serverId: string };
 
-export const test = authTest.extend<{ seededServer: SeededServer }>({
-  seededServer: async ({ authed, baseURL }, use) => {
+export const test = serversTest.extend<{ seededServer: SeededServer }>({
+  seededServer: async ({ authed, baseURL, mcpFakeOrigin }, use) => {
     if (!baseURL) {
-      throw new Error('baseURL is not set. Ensure tests call test.use({ baseURL: process.env.PW_BASE_URL }).');
+      throw new Error('baseURL is not set. Ensure infra fixture is applied.');
     }
 
-    const origin = process.env.MCP_FAKE_ORIGIN || '';
-    if (!origin) {
-      throw new Error('MCP_FAKE_ORIGIN is not set by globalSetup.');
-    }
+    const origin = mcpFakeOrigin;
 
     const payload = {
       mcpOrigin: `${origin}?random=${Math.random().toString(36).slice(2)}`,

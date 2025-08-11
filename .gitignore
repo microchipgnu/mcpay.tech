@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Playwright / test artifacts (app)
+app/tests/e2e/artifacts/
+app/playwright-report/
+app/test-results/
+# Next build output used by tests
+app/.next/
+tests/e2e/artifacts/
