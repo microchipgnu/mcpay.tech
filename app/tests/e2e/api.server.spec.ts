@@ -21,7 +21,7 @@ test('create api key for an authenticated user', async ({ authed }) => {
     expect(result.apiKey).toBeDefined();
 });
 
-test('create api key for an unauthenticated user', async ({ anon }) => {
+test('do not authorize to create api key for an unauthenticated user', async ({ anon }) => {
     const apiKey = await anon.post(`/api/users/1/api-keys`, {
         data: {
             name: 'test',
