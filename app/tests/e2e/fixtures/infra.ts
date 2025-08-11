@@ -1,7 +1,9 @@
-import { test as base, expect, type FullConfig } from '@playwright/test';
-import { GenericContainer, StartedTestContainer } from 'testcontainers';
-import { spawn, type SpawnOptions } from 'node:child_process';
+import { serve } from '@hono/node-server';
+import { test as base, expect } from '@playwright/test';
 import getPort from 'get-port';
+import { Hono } from 'hono';
+import { spawn, type SpawnOptions } from 'node:child_process';
+import { GenericContainer, StartedTestContainer } from 'testcontainers';
 
 async function run(cmd: string, args: string[], env: NodeJS.ProcessEnv) {
   return new Promise<void>((resolve, reject) => {
@@ -15,6 +17,7 @@ type InfraFixtures = {
   dbUrl: string;
   redisUrl: string;
   baseURL: string; // override Playwright option via fixture
+  facilitator: string;
 };
 
 export const test = base.extend<InfraFixtures>({
@@ -50,8 +53,114 @@ export const test = base.extend<InfraFixtures>({
     try { await redis.stop(); } catch {}
   },
 
+  facilitator: async ({}, use) => {
+    const facilitatorPort = await getPort();
+    async function startFakeFacilitator(port: number) {
+      const app = new Hono();
+    
+      // In-memory replay protection across calls
+      const seenNonces = new Set<string>();
+      const toBigIntOrZero = (value: unknown): bigint => {
+        try {
+          if (typeof value === 'bigint') return value;
+          if (typeof value === 'number') return BigInt(Math.floor(value));
+          if (typeof value === 'string') return BigInt(value);
+        } catch {}
+        return 0n;
+      };
+    
+      app.get('/verify', (c) =>
+        c.json({
+          endpoint: '/verify',
+          description: 'POST to verify x402 payments',
+          body: { paymentPayload: 'PaymentPayload', paymentRequirements: 'PaymentRequirements' },
+        }),
+      );
+    
+      app.post('/verify', async (c) => {
+        try {
+          const body: any = await c.req.json();
+          const paymentPayload = body?.paymentPayload ?? {};
+          const reqsRaw = body?.paymentRequirements;
+          const reqs = Array.isArray(reqsRaw) ? reqsRaw : [reqsRaw];
+
+          const maxAmount = toBigIntOrZero(reqs?.[0]?.maxAmountRequired);
+          const sent = toBigIntOrZero(paymentPayload?.payload?.authorization?.value);
+          const nonce = paymentPayload?.payload?.authorization?.nonce ?? '0x00';
+
+          if (sent < maxAmount) {
+            return c.json({ isValid: false, invalidReason: 'underpayment' });
+          }
+          if (seenNonces.has(nonce)) {
+            return c.json({ isValid: false, invalidReason: 'replay' });
+          }
+
+          return c.json({ isValid: true });
+        } catch {
+          return c.json({ isValid: false, invalidReason: 'invalid_request' });
+        }
+      });
+    
+      app.get('/settle', (c) =>
+        c.json({
+          endpoint: '/settle',
+          description: 'POST to settle x402 payments',
+          body: { paymentPayload: 'PaymentPayload', paymentRequirements: 'PaymentRequirements' },
+        }),
+      );
+    
+      app.get('/supported', (c) =>
+        c.json({
+          kinds: [
+            {
+              x402Version: 1,
+              scheme: 'exact',
+              network: 'base-sepolia',
+            },
+          ],
+        }),
+      );
+    
+      app.post('/settle', async (c) => {
+        try {
+          const body: any = await c.req.json();
+          const paymentPayload = body?.paymentPayload ?? {};
+          const nonce = paymentPayload?.payload?.authorization?.nonce ?? '0x00';
+          const network = body?.paymentRequirements?.network ?? 'base-sepolia';
+          if (seenNonces.has(nonce)) {
+            const txHash =
+              '0x' + Buffer.from(String(nonce)).toString('hex').slice(0, 64).padEnd(64, '0');
+            return c.json({ success: false, errorReason: 'replay', transaction: txHash, network });
+          }
+          seenNonces.add(nonce);
+
+          const txHash =
+            '0x' + Buffer.from(String(nonce)).toString('hex').slice(0, 64).padEnd(64, '0');
+          return c.json({ success: true, transaction: txHash, network });
+        } catch {
+          return c.json({ success: false, errorReason: 'invalid_request', transaction: '0x0', network: 'base-sepolia' });
+        }
+      });
+    
+      serve({ fetch: app.fetch, port });
+    
+      return {
+        close: async () => {
+          /* no-op */
+        },
+      } as const;
+    }
+
+    const facilitator = await startFakeFacilitator(facilitatorPort);
+
+    const localFacilitatorUrl = `http://localhost:${facilitatorPort}`;
+
+    await use(localFacilitatorUrl);
+    try { await facilitator.close(); } catch {}
+  },
+
   // Start Next server bound to the test's DB/Redis and expose as baseURL
-  baseURL: async ({ dbUrl, redisUrl }, use) => {
+  baseURL: async ({ dbUrl, redisUrl, facilitator }, use) => {
     const port = await getPort();
 
     const envForApp: NodeJS.ProcessEnv = {
@@ -59,10 +168,10 @@ export const test = base.extend<InfraFixtures>({
       NODE_ENV: 'test',
       DATABASE_URL: dbUrl,
       REDIS_URL: redisUrl,
-      // facilitator URLs come from global setup if present; defaults will be used otherwise
-      BASE_SEPOLIA_FACILITATOR_URL: process.env.BASE_SEPOLIA_FACILITATOR_URL || 'https://x402.org/facilitator',
-      SEI_TESTNET_FACILITATOR_URL: process.env.SEI_TESTNET_FACILITATOR_URL || 'https://6y3cdqj5s3.execute-api.us-west-2.amazonaws.com/prod',
-      FACILITATOR_URL: process.env.FACILITATOR_URL || 'https://x402.org/facilitator',
+      // Route all networks to the local fake facilitator
+      BASE_SEPOLIA_FACILITATOR_URL: facilitator,
+      SEI_TESTNET_FACILITATOR_URL: facilitator,
+      FACILITATOR_URL: facilitator,
       BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET || 'test_secret',
       GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID || 'fake',
       GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET || 'fake',
