@@ -100,10 +100,10 @@ export function HeroTab({
             id={`hero-tab-${item.id}`}
             onClick={() => onChange(item.id)}
             className={cn(
-              "relative flex-1 inline-flex items-center justify-center text-center font-mono font-semibold text-[8px] sm:text-[9px] tracking-widest select-none h-10 rounded-t-sm rounded-b-none transition",
+              "relative flex-1 inline-flex items-center justify-center text-center font-mono font-semibold text-[8px] sm:text-[9px] tracking-widest select-none h-10 rounded-t-sm rounded-b-none transition cursor-pointer",
               selected
                 ? "bg-muted text-foreground"
-                : "text-muted-foreground hover:text-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
             )}
           >
             <span className="relative z-[1]">{item.label}</span>

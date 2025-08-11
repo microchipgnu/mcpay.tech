@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { HeroTab } from "./hero-tab";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 
 type Copy = {
     id: "devs" | "hosts" | "agents";
@@ -51,12 +52,12 @@ export default function Hero({
 }) {
     const [active, setActive] = React.useState<Copy["id"]>("devs");
     const current = COPY.find((c) => c.id === active) ?? COPY[0];
+    const prefersReduced = useReducedMotion();
 
     return (
         <section className={cn("mx-auto w-full max-w-6xl px-4 md:px-6", className)}>
             {/* Image + Overlay Title */}
             <div className="relative mx-auto w-full overflow-hidden rounded-3xl">
-                {/* Aspect ratio: taller on mobile, wide on desktop */}
                 <div className="relative aspect-[3/4] sm:aspect-[21/9]">
                     <Image
                         src="/mcpay-hero-painting.png"
@@ -67,13 +68,11 @@ export default function Hero({
                         className="object-cover"
                     />
 
-                    {/* Overlay title: centered on mobile, left on desktop */}
                     <div className="absolute inset-0 flex items-end sm:items-end justify-center sm:justify-start">
                         <div className="w-full p-6 sm:p-10 md:p-14">
                             <h1 className="text-center sm:text-left text-2xl md:text-4xl font-host font-semibold leading-tight text-background drop-shadow">
                                 Tool–Call Based
-                                <br className="hidden sm:block" />
-                                {" "}
+                                <br className="hidden sm:block" />{" "}
                                 <span className="sm:ml-1">Payments for MCPs</span>
                             </h1>
                         </div>
@@ -99,9 +98,21 @@ export default function Hero({
                 aria-labelledby={`hero-tab-${current.id}`}
                 className="mx-auto mt-8 flex max-w-3xl flex-col items-center text-center"
             >
-                <p className="text-balance max-w-lg font-medium text-md text-muted-foreground sm:text-lg">
-                    {current.subheading}
-                </p>
+                <AnimatePresence mode="wait" initial={false}>
+                    <motion.p
+                        key={current.id} // re-mount on tab change
+                        className="text-balance max-w-lg font-medium text-md text-muted-foreground sm:text-lg"
+                        initial={{ opacity: 0, filter: "blur(6px)" }}
+                        animate={{ opacity: 1, filter: "blur(0px)" }}
+                        exit={{ opacity: 0, filter: "blur(6px)" }}        // ← blur+fade on disappear
+                        transition={{
+                            duration: prefersReduced ? 0 : 0.25,            // keep your 0.55
+                            ease: "easeOut",
+                        }}
+                    >
+                        {current.subheading}
+                    </motion.p>
+                </AnimatePresence>
 
                 <div className="mt-8">
                     <Button asChild size="lg" className="min-w-[10rem]">
