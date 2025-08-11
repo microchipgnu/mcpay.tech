@@ -57,7 +57,7 @@ export default function Hero({
     return (
         <section className={cn("mx-auto w-full max-w-6xl px-4 md:px-6", className)}>
             {/* Image + Overlay Title */}
-            <div className="relative mx-auto w-full overflow-hidden rounded-3xl">
+            <div className="relative mx-auto w-full overflow-hidden rounded-2xl mt-4">
                 <div className="relative aspect-[3/4] sm:aspect-[21/9]">
                     <Image
                         src="/mcpay-hero-painting.png"
@@ -81,7 +81,7 @@ export default function Hero({
             </div>
 
             {/* Tabs */}
-            <div className="mt-8">
+            <div className="mt-16">
                 <HeroTab
                     items={COPY.map(({ id, label }) => ({ id, label }))}
                     value={active}

@@ -7,23 +7,20 @@ import { toast } from "sonner"
 import { useTheme } from "@/components/providers/theme-context"
 import { urlUtils } from "@/lib/client/utils"
 import {
-  AlertCircle,
   ArrowRight,
   BarChart3,
-  DollarSign,
   Globe,
   Moon,
   Rocket,
-  Server,
   Sparkles,
   Sun,
   PenToolIcon as Tool,
   TrendingUp,
-  Zap
 } from "lucide-react"
 import Link from "next/link"
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import Hero from "@/components/custom-ui/hero"
+import HeroStats from "@/components/custom-ui/hero-stats"
 
 // API response types
 interface APITool {
@@ -86,43 +83,6 @@ interface APIServer {
   tools: APITool[];
 }
 
-interface AnalyticsData {
-  totalRequests: number;
-  successfulRequests: number;
-  failedRequests: number;
-  successRate: number;
-  averageExecutionTime: number;
-  totalRevenue: number;
-  totalPayments: number;
-  averagePaymentValue: number;
-  totalServers: number;
-  activeServers: number;
-  totalTools: number;
-  monetizedTools: number;
-  uniqueUsers: number;
-  totalProofs: number;
-  consistentProofs: number;
-  consistencyRate: number;
-  topToolsByRequests: Array<{
-    id: string;
-    name: string;
-    requests: number;
-    revenue: number;
-  }>;
-  topToolsByRevenue: Array<{
-    id: string;
-    name: string;
-    requests: number;
-    revenue: number;
-  }>;
-  dailyActivity: Array<{
-    date: string;
-    requests: number;
-    revenue: number;
-    uniqueUsers: number;
-  }>;
-}
-
 const transformServerData = (apiServer: APIServer): MCPServer => ({
   id: apiServer.serverId,
   name: apiServer.name || 'Unknown Server',
@@ -150,9 +110,6 @@ export default function MCPBrowser() {
   const [mcpServers, setMcpServers] = useState<MCPServer[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
-  const [analyticsLoading, setAnalyticsLoading] = useState(true)
-  const [analyticsError, setAnalyticsError] = useState<string | null>(null)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMoreServers, setHasMoreServers] = useState(true)
 
@@ -201,25 +158,6 @@ export default function MCPBrowser() {
   }
 
   useEffect(() => {
-    const fetchAnalytics = async () => {
-      try {
-        setAnalyticsLoading(true)
-        setAnalyticsError(null)
-
-        const analyticsResponse = await fetch(urlUtils.getApiUrl('/analytics/usage'))
-        if (!analyticsResponse.ok) {
-          throw new Error(`Failed to fetch analytics: ${analyticsResponse.status}`)
-        }
-
-        const analyticsData: AnalyticsData = await analyticsResponse.json()
-        setAnalytics(analyticsData)
-      } catch (err) {
-        setAnalyticsError(err instanceof Error ? err.message : 'Failed to fetch analytics')
-      } finally {
-        setAnalyticsLoading(false)
-      }
-    }
-
     const fetchServers = async () => {
       try {
         setLoading(true)
@@ -241,8 +179,6 @@ export default function MCPBrowser() {
         setLoading(false)
       }
     }
-
-    fetchAnalytics()
     fetchServers()
   }, [])
 
@@ -272,98 +208,6 @@ export default function MCPBrowser() {
     navigator.clipboard.writeText(text)
     toast.success("Endpoint copied • paste into `fetch()`")
   }
-
-  // Format number with commas
-  const formatNumber = (num: number | undefined | null) => {
-    if (num === undefined || num === null || isNaN(num)) return '0'
-    return num.toLocaleString()
-  }
-
-  // Format currency
-  const formatCurrency = (num: number | undefined | null) => {
-    if (num === undefined || num === null || isNaN(num)) return '$0.00'
-    return `$${num.toFixed(2)}`
-  }
-
-  // Enhanced stats card component with original color scheme
-  const StatsCard = ({
-    title,
-    value,
-    icon: Icon,
-    subtitle,
-    trend,
-    delay = 0
-  }: {
-    title: string
-    value: string | number
-    icon: React.ComponentType<{ className?: string }>
-    subtitle?: string
-    trend?: string
-    delay?: number
-  }) => (
-    <Card className={`group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-500 transform hover:-translate-y-1 ${isDark ? "bg-gray-800/50 backdrop-blur" : "bg-white/80 backdrop-blur"
-      }`} style={{ animationDelay: `${delay}ms` }}>
-      {/* Subtle background */}
-      <div className={`absolute inset-0 ${isDark ? "bg-blue-900/5" : "bg-blue-50/50"} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-
-      {/* Content */}
-      <div className="relative p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className={`p-3 rounded-xl ${isDark ? "bg-blue-900/20" : "bg-blue-50"} shadow-lg`}>
-            <Icon className={`h-6 w-6 ${isDark ? "text-blue-400" : "text-blue-600"}`} />
-          </div>
-          {trend && (
-            <div className={`flex items-center text-sm font-medium px-2 py-1 rounded-full ${trend.startsWith('+')
-              ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20'
-              : trend.startsWith('-')
-                ? 'text-red-600 bg-red-50 dark:bg-red-900/20'
-                : 'text-gray-600 bg-gray-50 dark:bg-gray-700'
-              }`}>
-              <TrendingUp className="h-3 w-3 mr-1" />
-              {trend}
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-1">
-          <p className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-            {title}
-          </p>
-          <p className={`text-3xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
-            {value}
-          </p>
-          {subtitle && (
-            <p className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>
-              {subtitle}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Hover effect */}
-      <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-lg" />
-    </Card>
-  )
-
-  // Enhanced stats skeleton component
-  const StatsSkeleton = ({ delay = 0 }: { delay?: number }) => (
-    <Card className={`overflow-hidden border-0 shadow-lg ${isDark ? "bg-gray-800/50 backdrop-blur" : "bg-white/80 backdrop-blur"
-      }`} style={{ animationDelay: `${delay}ms` }}>
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className={`p-3 rounded-xl animate-pulse ${isDark ? "bg-gray-700" : "bg-gray-200"}`}>
-            <div className="h-6 w-6" />
-          </div>
-          <div className={`h-6 w-12 rounded-full animate-pulse ${isDark ? "bg-gray-700" : "bg-gray-200"}`} />
-        </div>
-        <div className="space-y-2">
-          <div className={`h-4 rounded animate-pulse ${isDark ? "bg-gray-700" : "bg-gray-200"}`} style={{ width: '60%' }} />
-          <div className={`h-8 rounded animate-pulse ${isDark ? "bg-gray-700" : "bg-gray-200"}`} style={{ width: '40%' }} />
-          <div className={`h-3 rounded animate-pulse ${isDark ? "bg-gray-700" : "bg-gray-200"}`} style={{ width: '80%' }} />
-        </div>
-      </div>
-    </Card>
-  )
 
   // Enhanced skeleton card component
   const SkeletonCard = ({ delay = 0 }: { delay?: number }) => (
@@ -502,60 +346,13 @@ export default function MCPBrowser() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        <section className="mb-16">
+        <section className="mb-16 md:mb-32">
           <Hero />
         </section>
-        {/* Enhanced Platform Stats */}
-        <div className="mb-16">
-          {analyticsLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <StatsSkeleton key={`stats-skeleton-${index}`} delay={index * 100} />
-              ))}
-            </div>
-          ) : analyticsError ? (
-            <div className="text-center py-12">
-              <div className="p-4 rounded-full bg-red-100 dark:bg-red-900/20 w-fit mx-auto mb-6">
-                <AlertCircle className={`h-12 w-12 ${isDark ? "text-red-400" : "text-red-500"}`} />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Unable to load statistics</h3>
-              <p className={`text-sm ${isDark ? "text-red-400" : "text-red-500"}`}>
-                We&apos;re working to restore the data feed
-              </p>
-            </div>
-          ) : analytics ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatsCard
-                title="Live MCP Servers"
-                value={formatNumber(analytics.totalServers)}
-                icon={Server}
-                subtitle={`${analytics.activeServers} online now`}
-                delay={0}
-              />
-              <StatsCard
-                title="USDC Paid Out"
-                value={formatCurrency(analytics.totalRevenue)}
-                icon={DollarSign}
-                subtitle={`${formatNumber(analytics.totalPayments)} transactions`}
-                delay={100}
-              />
-              <StatsCard
-                title="Avg. payout / 1k calls"
-                value={formatCurrency(analytics.totalRequests > 0 ? (analytics.totalRevenue / (analytics.totalRequests / 1000)) : 0)}
-                icon={TrendingUp}
-                subtitle={`${analytics.successRate}% success rate`}
-                delay={200}
-              />
-              <StatsCard
-                title="Easiest server setup"
-                value="< 1 min"
-                icon={Zap}
-                subtitle={`${analytics.monetizedTools} monetized tools`}
-                delay={300}
-              />
-            </div>
-          ) : null}
-        </div>
+
+        <section className="mb-10">
+          <HeroStats />
+        </section>
 
         {/* Enhanced Browse Servers Section */}
         <div className="mb-12" id="servers-section">
