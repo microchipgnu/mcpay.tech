@@ -37,13 +37,13 @@ export default function HeroStats() {
   }) => (
     <Card className="border bg-background rounded-md p-0 gap-0">
       <CardContent className="px-6 py-6">
-        <div className="text-sm font-medium text-muted-foreground mb-3">
+        <div className="text-sm font-medium text-muted-foreground mb-2">
           {label}
         </div>
         {loading ? (
           <Skeleton className="h-7 w-16" />
         ) : (
-          <div className="text-2xl font-bold font-mono tracking-tight">
+          <div className="text-3xl font-bold font-mono tracking-tight">
             {value ?? "—"}
           </div>
         )}
