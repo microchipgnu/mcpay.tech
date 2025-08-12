@@ -6,7 +6,7 @@ function cookieFromSetCookieHeaders(setCookieHeaders: string[]): string {
   return setCookieHeaders.map((h) => h.split(';')[0]).join('; ');
 }
 
-export const test = infra.extend<{ sessionCookie: string; authed: APIRequestContext, anon: APIRequestContext; authedWithApiKeyAndFunds: {request: APIRequestContext, apiKey: string, sessionCookie: string} }>({
+export const test = infra.extend<{ sessionCookie: string; authed: APIRequestContext, anon: APIRequestContext; authedWithApiKeyAndFunds: {request: APIRequestContext, apiKey: string, sessionCookie: string, userId: string, walletAddress: string | undefined } }>({
   anon: async ({ baseURL }, use) => {
     const anon = await request.newContext({ baseURL });
     await use(anon);
@@ -77,7 +77,7 @@ export const test = infra.extend<{ sessionCookie: string; authed: APIRequestCont
     console.log("wallet", wallet);
     expect(wallet.ok()).toBeTruthy();
 
-    await use({ request: authed, apiKey: (await apiKey.json()).apiKey, sessionCookie });
+    await use({ request: authed, apiKey: (await apiKey.json()).apiKey, sessionCookie, userId, walletAddress: process.env.TEST_EVM_ADDRESS });
     await authed.dispose();
   },
 });

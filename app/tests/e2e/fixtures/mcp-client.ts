@@ -41,30 +41,14 @@ export const test = seedTest.extend<{ noAuthMcpClient: MCPClient, privateKeyMcpC
       throw new Error('baseURL is not set. Ensure infra fixture is applied.');
     }
 
-    const origin = new URL(`/mcp/${seededServer.serverId}`, baseURL);
-    // Pull the cookie header out of the authed context. Playwright does not expose headers directly,
-    // so we read cookies for this origin and build a Cookie header string.
-    // const cookies = await authedWithApiKeyAndFunds.request.storageState();
-    // const cookieHeader = cookies.cookies
-    //   .filter(c => {
-    //     // Match cookies for our baseURL origin
-    //     try {
-    //       const u = new URL(baseURL);
-    //       return c.domain === u.hostname || c.domain === '.' + u.hostname;
-    //     } catch {
-    //       return false;
-    //     }
-    //   })
-    //   .map(c => `${c.name}=${c.value}`)
-    //   .join('; ');
+    const origin = new URL(`/mcp/${seededServer.serverId}?apiKey=${authedWithApiKeyAndFunds.apiKey}`, baseURL);
 
     const transport = new StreamableHTTPClientTransport(origin, {
       requestInit: {
         headers: {
-          // ...(cookieHeader ? { cookie: cookieHeader } : {}),
           // 'x-wallet-provider': 'coinbase-cdp',
           // 'x-wallet-type': 'managed',
-          'x-api-key': authedWithApiKeyAndFunds.apiKey,
+          // 'x-api-key': authedWithApiKeyAndFunds.apiKey,
         },
         credentials: 'include',
       },

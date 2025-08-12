@@ -38,8 +38,8 @@ export default async (_cfg: FullConfig) => {
         KV_REST_API_URL: process.env.KV_REST_API_URL || 'https://kv.local',
         KV_REST_API_TOKEN: process.env.KV_REST_API_TOKEN || 'fake',
         FACILITATOR_URL: `https://x402.org/facilitator`,
-        TEST_EVM_PRIVATE_KEY: process.env.TEST_EVM_PRIVATE_KEY || '0x1234567890abcdef...',
-        TEST_EVM_ADDRESS: process.env.TEST_EVM_ADDRESS || '0x1234567890abcdef...',
+        TEST_EVM_PRIVATE_KEY: process.env.TEST_EVM_PRIVATE_KEY || '0x9de0c4a9556763137ba1a6614569f9a12e3117801a909fe8f51c96596a54870a',
+        TEST_EVM_ADDRESS: process.env.TEST_EVM_ADDRESS || '0x422F7928F15EBb4904d3A33775F2eBFc82B5f29A',
         TEST_SOLANA_SECRET_KEY: process.env.TEST_SOLANA_SECRET_KEY || '0x1234567890abcdef...',
         TEST_SOLANA_ADDRESS: process.env.TEST_SOLANA_ADDRESS || '0x1234567890abcdef...',
         TEST_NEAR_PRIVATE_KEY: process.env.TEST_NEAR_PRIVATE_KEY || '0x1234567890abcdef...',
@@ -52,8 +52,8 @@ export default async (_cfg: FullConfig) => {
 
     process.env.BASE_SEPOLIA_FACILITATOR_URL = `https://x402.org/facilitator`;
     process.env.SEI_TESTNET_FACILITATOR_URL = `https://6y3cdqj5s3.execute-api.us-west-2.amazonaws.com/prod`;
-    process.env.TEST_EVM_PRIVATE_KEY = process.env.TEST_EVM_PRIVATE_KEY || '0x1234567890abcdef...';
-    process.env.TEST_EVM_ADDRESS = process.env.TEST_EVM_ADDRESS || '0x1234567890abcdef...';
+    process.env.TEST_EVM_PRIVATE_KEY = process.env.TEST_EVM_PRIVATE_KEY || '0x9de0c4a9556763137ba1a6614569f9a12e3117801a909fe8f51c96596a54870a';
+    process.env.TEST_EVM_ADDRESS = process.env.TEST_EVM_ADDRESS || '0x422F7928F15EBb4904d3A33775F2eBFc82B5f29A';
 };
 
 export async function teardown() {

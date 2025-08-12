@@ -1,4 +1,4 @@
-import { test as authTest, expect } from './auth';
+import { expect } from './auth';
 import { test as serversTest } from './servers';
 
 type SeededServer = { id: string; serverId: string };
