@@ -6,12 +6,12 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
   // Database
-  DATABASE_URL: z.url('DATABASE_URL must be a valid URL'),
+  DATABASE_URL: z.url('DATABASE_URL must be a valid URL').default(''),
 
   // Authentication
-  BETTER_AUTH_SECRET: z.string().min(1, 'BETTER_AUTH_SECRET is required'),  
-  GITHUB_CLIENT_ID: z.string().min(1, 'GITHUB_CLIENT_ID is required'),
-  GITHUB_CLIENT_SECRET: z.string().min(1, 'GITHUB_CLIENT_SECRET is required'),
+  BETTER_AUTH_SECRET: z.string().min(1, 'BETTER_AUTH_SECRET is required').default(''),  
+  GITHUB_CLIENT_ID: z.string().min(1, 'GITHUB_CLIENT_ID is required').default(''),
+  GITHUB_CLIENT_SECRET: z.string().min(1, 'GITHUB_CLIENT_SECRET is required').default(''),
 
   // Facilitator Configuration
   FACILITATOR_EVM_PRIVATE_KEY: z.string().optional(),
@@ -20,13 +20,13 @@ const envSchema = z.object({
   SEI_TESTNET_FACILITATOR_URL: z.url().default('https://6y3cdqj5s3.execute-api.us-west-2.amazonaws.com/prod'),
 
   // CDP Configuration
-  CDP_API_KEY: z.string().min(1, 'CDP_API_KEY is required'),
-  CDP_API_SECRET: z.string().min(1, 'CDP_API_SECRET is required'),
-  CDP_WALLET_SECRET: z.string().min(1, 'CDP_WALLET_SECRET is required'),
+  CDP_API_KEY: z.string().min(1, 'CDP_API_KEY is required').default(''),
+  CDP_API_SECRET: z.string().min(1, 'CDP_API_SECRET is required').default(''),
+  CDP_WALLET_SECRET: z.string().min(1, 'CDP_WALLET_SECRET is required').default(''),
 
   // Vercel KV Configuration
-  KV_REST_API_URL: z.url('KV_REST_API_URL must be a valid URL'),
-  KV_REST_API_TOKEN: z.string().min(1, 'KV_REST_API_TOKEN is required'),
+  KV_REST_API_URL: z.url('KV_REST_API_URL must be a valid URL').default(''),
+  KV_REST_API_TOKEN: z.string().min(1, 'KV_REST_API_TOKEN is required').default(''),
 
   // Payment strategy configuration
   PAYMENT_STRATEGY_ENABLED: z.boolean().default(true),
@@ -107,7 +107,7 @@ export const getFacilitatorUrl = (network?: string): string => {
 };
 
 // Helper for better-auth secret
-export const getBetterAuthSecret = (): string => env.BETTER_AUTH_SECRET;
+  export const getBetterAuthSecret = (): string => env.BETTER_AUTH_SECRET;
 
 // Helper for database connection
 export const getDatabaseUrl = (): string => env.DATABASE_URL;
