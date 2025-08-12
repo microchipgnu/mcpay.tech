@@ -18,7 +18,7 @@ export const test = serversTest.extend<{ seededServer: SeededServer }>({
       name: 'Fake MCP',
       description: 'Test server',
       tools: [{ 
-        name: 'myTool', 
+        name: 'paidTool', 
         pricing: [{ 
           id: '1',
           createdAt: new Date().toISOString(),

@@ -19,7 +19,7 @@ test('register server with authed context', async ({ authed, mcpFakeOrigin2 }) =
     requireAuth: false,
     name: 'E2E Server',
     description: 'Test server from e2e',
-    tools: [{ name: 'myTool' }],
+    tools: [{ name: 'paidTool' }],
   };
   const res = await authed.post('/api/servers', { data: payload });
   expect([201, 400]).toContain(res.status());

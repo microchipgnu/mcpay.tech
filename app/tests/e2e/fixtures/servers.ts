@@ -27,7 +27,7 @@ export const test = authTest.extend<ServersFixtures>({
 
     const app = new Hono();
     const handler = createMcpHandler(async (server) => {
-      server.tool('myTool', 'Test tool', async () => ({
+      server.tool('paidTool', 'Test tool', async () => ({
         content: [{ type: 'text', text: 'Hello, world!' }],
       }));
     });
@@ -56,7 +56,7 @@ export const test = authTest.extend<ServersFixtures>({
 
     const app = new Hono();
     const handler = createMcpHandler(async (server) => {
-      server.tool('myTool', 'Test tool', async () => ({
+      server.tool('paidTool', 'Test tool', async () => ({
         content: [{ type: 'text', text: 'Hello, world!' }],
       }));
     });
