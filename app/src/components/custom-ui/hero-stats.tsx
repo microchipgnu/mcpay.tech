@@ -43,7 +43,7 @@ export default function HeroStats() {
         {loading ? (
           <Skeleton className="h-7 w-16" />
         ) : (
-          <div className="text-3xl font-bold font-mono tracking-tight">
+          <div className="text-3xl font-semibold font-mono tracking-tight">
             {value ?? "—"}
           </div>
         )}

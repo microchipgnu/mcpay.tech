@@ -73,7 +73,7 @@ export function HeroTab({
       aria-label="Hero sections"
       onKeyDown={handleKey}
       className={cn(
-        "mx-auto max-w-lg flex w-full items-center",
+        "flex w-full max-w-md items-center justify-center sm:justify-start mx-auto sm:mx-0",
         className
       )}
       onMouseEnter={() => {
