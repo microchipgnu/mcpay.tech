@@ -18,6 +18,7 @@ import { useEffect, useState } from "react"
 import Hero from "@/components/custom-ui/hero"
 import HeroStats from "@/components/custom-ui/hero-stats"
 import ServersGrid from "@/components/custom-ui/servers-grid"
+import ContentCards from "@/components/custom-ui/content-cards"
 
 // API response types
 interface APITool {
@@ -304,7 +305,7 @@ export default function MCPBrowser() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        <section className="mb-16 md:mb-32">
+        <section className="mb-16 md:mb-40">
           <Hero />
         </section>
 
@@ -312,12 +313,11 @@ export default function MCPBrowser() {
           <HeroStats />
         </section>
 
-        <section className="mb-10">
+        <section className="mb-40">
           <div className="max-w-6xl px-4 md:px-6 mx-auto">
             <h2 className="text-3xl font-semibold font-host mb-10">Featured Servers</h2>
-            </div>
-            <ServersGrid servers={mcpServers} loading={loading} />
-          
+          </div>
+          <ServersGrid servers={mcpServers} loading={loading} />
         </section>
 
         {/* Load More Button */}
@@ -344,6 +344,13 @@ export default function MCPBrowser() {
             </Button>
           </div>
         )}
+
+        <section className="mb-10">
+          <div className="max-w-6xl px-4 md:px-6 mx-auto">
+            <h2 className="text-3xl font-semibold font-host mb-10">How it works</h2>
+          </div>
+          <ContentCards />
+        </section>
 
         {/* Enhanced Footer */}
         <div className={`text-center py-12 border-t ${isDark ? "border-gray-700" : "border-gray-200"}`}>
