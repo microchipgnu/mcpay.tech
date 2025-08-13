@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Code2, DollarSign } from "lucide-react";
+import { PlugZap, DollarSign } from "lucide-react";
 
 export default function ContentCards() {
   return (
@@ -16,7 +16,7 @@ export default function ContentCards() {
             {/* LEFT: copy */}
             <div className="p-6 sm:p-8">
               <Header
-                icon={<Code2 className="h-5 w-5 text-muted-foreground" />}
+                icon={<PlugZap className="h-5 w-5 text-muted-foreground" />}
                 title="Consume"
                 description="One account to rule them all, no subscriptions. Browse all the MCPs from major registries, and pay only for what you use."
                 descriptionClassName="consume-subheading"

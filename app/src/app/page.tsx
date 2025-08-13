@@ -19,7 +19,7 @@ import Hero from "@/components/custom-ui/hero"
 import HeroStats from "@/components/custom-ui/hero-stats"
 import ServersGrid from "@/components/custom-ui/servers-grid"
 import ContentCards from "@/components/custom-ui/content-cards"
-
+import Footer from "@/components/custom-ui/footer"
 // API response types
 interface APITool {
   id: string;
@@ -207,12 +207,7 @@ export default function MCPBrowser() {
     const errorInfo = getFriendlyErrorMessage(error)
 
     return (
-      <div className={`min-h-screen ${isDark ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" : "bg-gradient-to-br from-gray-50 via-white to-gray-100"}`}>
-        {/* Subtle background gradient */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className={`absolute inset-0 ${isDark ? "bg-gradient-to-br from-gray-900/50 via-transparent to-gray-800/30" : "bg-gradient-to-br from-blue-50/30 via-transparent to-purple-50/20"}`} />
-        </div>
-
+      <div className="min-h-screen bg-background">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Hero Section */}
           <div className="text-center mb-16 relative">
@@ -297,12 +292,7 @@ export default function MCPBrowser() {
   }
 
   return (
-    <div className={`min-h-screen ${isDark ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" : "bg-gradient-to-br from-gray-50 via-white to-gray-100"}`}>
-      {/* Subtle background gradient */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className={`absolute inset-0 ${isDark ? "bg-gradient-to-br from-gray-900/50 via-transparent to-gray-800/30" : "bg-gradient-to-br from-blue-50/30 via-transparent to-purple-50/20"}`} />
-      </div>
-
+    <div className="min-h-screen bg-background">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         <section className="mb-16 md:mb-40">
@@ -351,47 +341,8 @@ export default function MCPBrowser() {
           </div>
           <ContentCards />
         </section>
-
-        {/* Enhanced Footer */}
-        <div className={`text-center py-12 border-t ${isDark ? "border-gray-700" : "border-gray-200"}`}>
-          <div className="flex flex-col items-center gap-6">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-blue-500" />
-              <p className={`text-lg ${isDark ? "text-gray-300" : "text-gray-600"}`}>
-                Powered by the <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Model Context Protocol</a> and <a href="https://x402.org" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">x402</a>
-              </p>
-            </div>
-
-            <div className="flex items-center gap-4 text-sm">
-              <a
-                href="https://github.com/microchipgnu/mcpay.fun"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`hover:text-[#0052FF] transition-colors duration-200 ${isDark ? "text-gray-400" : "text-gray-500"} cursor-pointer`}
-              >
-                GitHub
-              </a>
-              <span className={isDark ? "text-gray-600" : "text-gray-400"}>·</span>
-              <a
-                href="https://x.com/microchipgnu"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`hover:text-[#0052FF] transition-colors duration-200 ${isDark ? "text-gray-400" : "text-gray-500"} cursor-pointer`}
-              >
-                X
-              </a>
-              <span className={isDark ? "text-gray-600" : "text-gray-400"}>·</span>
-              <button
-                onClick={toggleTheme}
-                className={`flex items-center gap-1.5 hover:text-[#0052FF] transition-colors duration-200 ${isDark ? "text-gray-400" : "text-gray-500"} cursor-pointer`}
-              >
-                {isDark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
-                {isDark ? "Light" : "Dark"}
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
+      <Footer />
     </div>
   )
 }
