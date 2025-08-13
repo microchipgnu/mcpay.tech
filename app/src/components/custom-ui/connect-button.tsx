@@ -8,7 +8,7 @@ import { getNetworkConfig, type UnifiedNetwork } from '@/lib/commons/networks'
 import type { Network } from '@/types/blockchain'
 import { Loader2, Zap, AlertTriangle } from 'lucide-react'
 
-const supportedChains: Network[] = ['base-sepolia', 'sei-testnet']
+const supportedChains: Network[] = ['base-sepolia', 'sei-testnet', 'base']
 
 export function ConnectButton() {
   const { address, isConnected, connector } = useAccount()

@@ -20,7 +20,7 @@ import { type CDPNetwork, type CDPWalletMetadata, type Wallet } from "@/types";
 import { createPaymentHeader, type ExtendedPaymentRequirements } from "@/types/x402";
 import { createWalletClient, http } from "viem";
 import { toAccount } from "viem/accounts";
-import { baseSepolia, seiTestnet } from "viem/chains";
+import { base, baseSepolia, seiTestnet } from "viem/chains";
 
 export class CDPSigningStrategy implements PaymentSigningStrategy {
     name = "CDP";
@@ -213,6 +213,8 @@ export class CDPSigningStrategy implements PaymentSigningStrategy {
         
         // Return appropriate viem chain based on network
         switch (network) {
+            case 'base':
+                return base;
             case 'base-sepolia':
                 return baseSepolia;
             case 'sei-testnet':

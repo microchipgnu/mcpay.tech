@@ -149,6 +149,7 @@ export type ChainConfig = {
 
 // Network-specific facilitator URLs
 const FACILITATOR_URLS: Partial<Record<SupportedNetwork, Resource>> = {
+    "base": getFacilitatorUrl("base") as Resource,
     "base-sepolia": getFacilitatorUrl("base-sepolia") as Resource,
     "sei-testnet": getFacilitatorUrl("sei-testnet") as Resource,
 } as const;

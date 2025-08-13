@@ -19,7 +19,7 @@ import type {
 import { x402Version } from "@/lib/gateway/payments";
 import type { UnifiedNetwork } from "@/lib/commons/networks";
 import { createWalletClient, http } from "viem";
-import { baseSepolia, seiTestnet } from "viem/chains";
+import { base, baseSepolia, seiTestnet } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import { createPaymentHeader, type ExtendedPaymentRequirements } from "@/types/x402";
 
@@ -118,6 +118,8 @@ export class TestingSigningStrategy implements PaymentSigningStrategy {
 
   private getViemChainOrNull(network: UnifiedNetwork) {
     switch (network) {
+      case "base":
+        return base;
       case "base-sepolia":
         return baseSepolia;
       case "sei-testnet":

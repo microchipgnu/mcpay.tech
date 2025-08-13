@@ -16,6 +16,7 @@ const envSchema = z.object({
   // Facilitator Configuration
   FACILITATOR_EVM_PRIVATE_KEY: z.string().optional(),
   FACILITATOR_URL: z.url().default('https://x402.org/facilitator'),
+  BASE_FACILITATOR_URL: z.url().default('https://facilitator.x402.rs'),
   BASE_SEPOLIA_FACILITATOR_URL: z.url().default('https://x402.org/facilitator'),
   SEI_TESTNET_FACILITATOR_URL: z.url().default('https://6y3cdqj5s3.execute-api.us-west-2.amazonaws.com/prod'),
 
@@ -97,6 +98,8 @@ export const isTest = () => env.NODE_ENV === 'test';
 // Helper for getting facilitator URLs by network
 export const getFacilitatorUrl = (network?: string): string => {
   switch (network) {
+    case 'base':
+      return env.BASE_FACILITATOR_URL;
     case 'base-sepolia':
       return env.BASE_SEPOLIA_FACILITATOR_URL;
     case 'sei-testnet':

@@ -5,7 +5,7 @@
  * It provides endpoints for user management, server configuration, and other core functionality.
  */
 
-import { getBlockchainArchitecture, getBlockchainsForArchitecture, getMainnetStablecoinBalances, getStablecoinBalances, getTestnetStablecoinBalances, isSupportedBlockchain } from "@/lib/commons";
+import { getBlockchainArchitecture, getBlockchainsForArchitecture, getMainnetNetworks, getMainnetStablecoinBalances, getStablecoinBalances, getTestnetNetworks, getTestnetStablecoinBalances, isSupportedBlockchain, UNIFIED_NETWORKS } from "@/lib/commons";
 import { CDP, createCDPAccount } from "@/lib/gateway/3rd-parties/cdp";
 import { createOneClickBuyUrl, getSupportedAssets, getSupportedNetworks } from "@/lib/gateway/3rd-parties/onramp";
 import { VLayer, type ExecutionContext } from "@/lib/gateway/3rd-parties/vlayer";
@@ -1187,6 +1187,21 @@ app.get('/users/:userId/wallets/cdp/:accountId/balances', authMiddleware, async 
         console.error('Error fetching CDP wallet balances:', error);
         return c.json({ error: (error as Error).message }, 400);
     }
+});
+
+app.get('/networks', async (c) => {
+    const networks = getMainnetNetworks().filter(network => UNIFIED_NETWORKS[network].isSupported);
+    return c.json(networks);
+});
+
+app.get('/networks/mainnet', async (c) => {
+    const networks = getMainnetNetworks().filter(network => UNIFIED_NETWORKS[network].isSupported);
+    return c.json(networks);
+});
+
+app.get('/networks/testnet', async (c) => {
+    const networks = getTestnetNetworks().filter(network => UNIFIED_NETWORKS[network].isSupported);
+    return c.json(networks);
 });
 
 app.get('/cdp/networks', async (c) => {

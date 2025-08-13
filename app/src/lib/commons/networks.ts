@@ -101,6 +101,8 @@ export interface NetworkConfig {
   
   // x402 integration
   x402Supported: boolean;
+
+  isSupported: boolean;
 }
 
 // =============================================================================
@@ -177,6 +179,7 @@ export const UNIFIED_NETWORKS: Record<UnifiedNetwork, NetworkConfig> = {
     chainId: 84532,
     architecture: 'evm',
     isTestnet: true,
+    isSupported: true,
     nativeCurrency: {
       name: 'Ethereum',
       symbol: 'ETH',
@@ -249,6 +252,7 @@ export const UNIFIED_NETWORKS: Record<UnifiedNetwork, NetworkConfig> = {
     chainId: 8453,
     architecture: 'evm',
     isTestnet: false,
+    isSupported: true,
     nativeCurrency: {
       name: 'Ethereum',
       symbol: 'ETH',
@@ -317,6 +321,7 @@ export const UNIFIED_NETWORKS: Record<UnifiedNetwork, NetworkConfig> = {
     chainId: 1328,
     architecture: 'evm',
     isTestnet: true,
+    isSupported: true,
     nativeCurrency: {
       name: 'Sei',
       symbol: 'SEI',
@@ -360,6 +365,7 @@ export const UNIFIED_NETWORKS: Record<UnifiedNetwork, NetworkConfig> = {
     chainId: 43113,
     architecture: 'evm',
     isTestnet: true,
+    isSupported: false,
     nativeCurrency: {
       name: 'Avalanche',
       symbol: 'AVAX',
@@ -403,6 +409,7 @@ export const UNIFIED_NETWORKS: Record<UnifiedNetwork, NetworkConfig> = {
     chainId: 43114,
     architecture: 'evm',
     isTestnet: false,
+    isSupported: false,
     nativeCurrency: {
       name: 'Avalanche',
       symbol: 'AVAX',
@@ -470,6 +477,7 @@ export const UNIFIED_NETWORKS: Record<UnifiedNetwork, NetworkConfig> = {
     chainId: 4689,
     architecture: 'evm',
     isTestnet: false,
+    isSupported: false,
     nativeCurrency: {
       name: 'IoTeX',
       symbol: 'IOTX',
@@ -513,6 +521,7 @@ export const UNIFIED_NETWORKS: Record<UnifiedNetwork, NetworkConfig> = {
     chainId: 1,
     architecture: 'evm',
     isTestnet: false,
+    isSupported: false,
     nativeCurrency: {
       name: 'Ethereum',
       symbol: 'ETH',
@@ -540,11 +549,12 @@ export const UNIFIED_NETWORKS: Record<UnifiedNetwork, NetworkConfig> = {
   },
 
   // ETHEREUM SEPOLIA TESTNET
-  'ethereum-sepolia': {
+  'ethereum-sepolia': { 
     name: 'Ethereum Sepolia',
     chainId: 11155111,
     architecture: 'evm',
     isTestnet: true,
+    isSupported: false,
     nativeCurrency: {
       name: 'Ethereum',
       symbol: 'ETH',
@@ -577,6 +587,7 @@ export const UNIFIED_NETWORKS: Record<UnifiedNetwork, NetworkConfig> = {
     chainId: 137,
     architecture: 'evm',
     isTestnet: false,
+    isSupported: false,
     nativeCurrency: {
       name: 'Polygon',
       symbol: 'MATIC',
@@ -604,11 +615,12 @@ export const UNIFIED_NETWORKS: Record<UnifiedNetwork, NetworkConfig> = {
   },
 
   // ARBITRUM MAINNET
-  'arbitrum': {
+  'arbitrum': { 
     name: 'Arbitrum One',
     chainId: 42161,
     architecture: 'evm',
     isTestnet: false,
+    isSupported: false,
     nativeCurrency: {
       name: 'Ethereum',
       symbol: 'ETH',
@@ -641,6 +653,7 @@ export const UNIFIED_NETWORKS: Record<UnifiedNetwork, NetworkConfig> = {
     chainId: 'mainnet-beta',
     architecture: 'solana',
     isTestnet: false,
+    isSupported: false,
     nativeCurrency: {
       name: 'Solana',
       symbol: 'SOL',
@@ -684,6 +697,7 @@ export const UNIFIED_NETWORKS: Record<UnifiedNetwork, NetworkConfig> = {
     chainId: 'devnet',
     architecture: 'solana',
     isTestnet: true,
+    isSupported: false,
     nativeCurrency: {
       name: 'Solana',
       symbol: 'SOL',
@@ -710,11 +724,12 @@ export const UNIFIED_NETWORKS: Record<UnifiedNetwork, NetworkConfig> = {
   },
 
   // NEAR MAINNET
-  'near-mainnet': {
+  'near-mainnet': { 
     name: 'NEAR Mainnet',
     chainId: 'mainnet',
     architecture: 'near',
     isTestnet: false,
+    isSupported: false,
     nativeCurrency: {
       name: 'NEAR',
       symbol: 'NEAR',
@@ -746,6 +761,7 @@ export const UNIFIED_NETWORKS: Record<UnifiedNetwork, NetworkConfig> = {
     chainId: 'testnet',
     architecture: 'near',
     isTestnet: true,
+    isSupported: false,
     nativeCurrency: {
       name: 'NEAR',
       symbol: 'NEAR',

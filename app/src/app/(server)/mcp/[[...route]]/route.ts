@@ -98,15 +98,15 @@ function getCacheKey(url: string, method: string, body?: ArrayBuffer): string {
 function getCachedResponse(cacheKey: string): Response | null {
     const entry = responseCache.get(cacheKey);
     if (!entry) return null;
-    
+
     const now = Date.now();
     if (now > entry.timestamp + entry.ttl) {
         responseCache.delete(cacheKey);
         return null;
     }
-    
+
     console.log(`[${new Date().toISOString()}] Cache hit for ${cacheKey}`);
-    
+
     // Reconstruct Response object
     const headers = new Headers(entry.response.headers);
     return new Response(entry.response.body, {
@@ -125,15 +125,15 @@ async function cacheResponse(cacheKey: string, response: Response, ttl: number =
         if (!cacheKey.startsWith('GET:') || response.status >= 400) {
             return;
         }
-        
+
         const clonedResponse = response.clone();
         const body = await clonedResponse.text();
         const headers: Record<string, string> = {};
-        
+
         clonedResponse.headers.forEach((value, key) => {
             headers[key] = value;
         });
-        
+
         const entry: CacheEntry = {
             response: {
                 status: response.status,
@@ -144,10 +144,10 @@ async function cacheResponse(cacheKey: string, response: Response, ttl: number =
             timestamp: Date.now(),
             ttl
         };
-        
+
         responseCache.set(cacheKey, entry);
         console.log(`[${new Date().toISOString()}] Cached response for ${cacheKey} (TTL: ${ttl}ms)`);
-        
+
         // Clean up old cache entries periodically
         if (responseCache.size > RATE_LIMIT_CONFIG.MAX_CACHE_SIZE) {
             const now = Date.now();
@@ -177,24 +177,24 @@ const USER_AGENTS = [
 function shouldRateLimit(hostname: string, maxRequestsPerMinute: number = RATE_LIMIT_CONFIG.MAX_REQUESTS_PER_MINUTE): boolean {
     const now = Date.now();
     const windowMs = 60 * 1000; // 1 minute
-    
+
     let rateInfo = rateLimitMap.get(hostname);
     if (!rateInfo || now > rateInfo.resetTime) {
         rateInfo = { requests: 0, resetTime: now + windowMs, lastRequest: 0 };
         rateLimitMap.set(hostname, rateInfo);
     }
-    
+
     // Check if we need to add delay between requests
     const timeSinceLastRequest = now - rateInfo.lastRequest;
-    
+
     if (timeSinceLastRequest < RATE_LIMIT_CONFIG.MIN_REQUEST_DELAY) {
         return true; // Rate limit - too fast
     }
-    
+
     if (rateInfo.requests >= maxRequestsPerMinute) {
         return true; // Rate limit - too many requests
     }
-    
+
     rateInfo.requests++;
     rateInfo.lastRequest = now;
     return false;
@@ -206,10 +206,10 @@ function shouldRateLimit(hostname: string, maxRequestsPerMinute: number = RATE_L
 async function addRequestDelay(hostname: string): Promise<void> {
     const rateInfo = rateLimitMap.get(hostname);
     if (!rateInfo) return;
-    
+
     const now = Date.now();
     const timeSinceLastRequest = now - rateInfo.lastRequest;
-    
+
     if (timeSinceLastRequest < RATE_LIMIT_CONFIG.MIN_REQUEST_DELAY) {
         const delayNeeded = RATE_LIMIT_CONFIG.MIN_REQUEST_DELAY - timeSinceLastRequest;
         console.log(`[${new Date().toISOString()}] Adding ${delayNeeded}ms delay for ${hostname}`);
@@ -233,13 +233,13 @@ async function retryWithBackoff<T>(
     baseDelayMs: number = 1000
 ): Promise<T> {
     let lastError: Error = new Error('Maximum retries exceeded');
-    
+
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
             return await operation();
         } catch (error) {
             lastError = error as Error;
-            
+
             // Check if it's a rate limit error
             if (error instanceof Error && error.message.includes('429')) {
                 if (attempt < maxRetries) {
@@ -249,12 +249,12 @@ async function retryWithBackoff<T>(
                     continue;
                 }
             }
-            
+
             // For non-rate-limit errors, don't retry
             throw error;
         }
     }
-    
+
     throw lastError;
 }
 
@@ -271,18 +271,18 @@ const HOP_BY_HOP = new Set([
 
     // Authentication headers. We don't want to forward these to the upstream server.
     'authorization',
-    
+
     // Infrastructure/proxy headers that could leak internal information
     'forwarded',
     'x-forwarded-for', 'x-forwarded-host', 'x-forwarded-port', 'x-forwarded-proto',
     'x-real-ip',
     'x-matched-path',
-    
+
     // Vercel-specific headers (comprehensive list)
     'x-vercel-deployment-url', 'x-vercel-forwarded-for', 'x-vercel-id',
     'x-vercel-internal-bot-check', 'x-vercel-internal-ingress-bucket', 'x-vercel-internal-ingress-port',
     'x-vercel-ip-as-number', 'x-vercel-ip-city', 'x-vercel-ip-continent', 'x-vercel-ip-country',
-    'x-vercel-ip-country-region', 'x-vercel-ip-latitude', 'x-vercel-ip-longitude', 
+    'x-vercel-ip-country-region', 'x-vercel-ip-latitude', 'x-vercel-ip-longitude',
     'x-vercel-ip-postal-code', 'x-vercel-ip-timezone',
     'x-vercel-ja4-digest', 'x-vercel-oidc-token', 'x-vercel-proxied-for',
     'x-vercel-proxy-signature', 'x-vercel-proxy-signature-ts',
@@ -301,12 +301,12 @@ const BLOCKED_HEADER_PREFIXES = [
  */
 function shouldBlockHeader(headerName: string): boolean {
     const lowerName = headerName.toLowerCase();
-    
+
     // Check explicit blocked headers
     if (HOP_BY_HOP.has(lowerName)) {
         return true;
     }
-    
+
     // Check blocked prefixes
     return BLOCKED_HEADER_PREFIXES.some(prefix => lowerName.startsWith(prefix));
 }
@@ -329,7 +329,7 @@ async function getAuthMethod(c: Context, user: UserWithWallet | null): Promise<s
     // Parse URL search params for API key checking
     const url = new URL(c.req.url);
     const searchParams = url.searchParams;
-    
+
     // Parse body params if available (for POST requests)
     let bodyParams: Record<string, unknown> | undefined = undefined;
     try {
@@ -352,7 +352,7 @@ async function getAuthMethod(c: Context, user: UserWithWallet | null): Promise<s
         searchParams,
         bodyParams
     });
-    
+
     console.log("MCP PROXY ROUTE", {
         apiKey,
         searchParams,
@@ -409,6 +409,7 @@ const forwardRequest = async (c: Context, id?: string, body?: ArrayBuffer, metad
     const url = new URL(c.req.url);
     url.host = targetUpstream.host;
     url.protocol = targetUpstream.protocol;
+    url.port = targetUpstream.port;
 
     // Remove /mcp/:id from path when forwarding to upstream, keeping everything after /:id
     const pathWithoutId = url.pathname.replace(/^\/mcp\/[^\/]+/, '')
@@ -455,7 +456,7 @@ const forwardRequest = async (c: Context, id?: string, body?: ArrayBuffer, metad
     if (!headers.has('user-agent')) {
         headers.set('user-agent', getRandomUserAgent());
     }
-    
+
     // Add more realistic browser headers
     headers.set('accept', 'application/json, text/event-stream, text/plain, */*');
     headers.set('accept-language', 'en-US,en;q=0.9');
@@ -482,6 +483,7 @@ const forwardRequest = async (c: Context, id?: string, body?: ArrayBuffer, metad
     console.log(`[${new Date().toISOString()}] Making request to upstream server`);
     console.log(`[${new Date().toISOString()}] Making fetch request:`, {
         url: url.toString(),
+        targetUpstream: targetUpstream.toString(),
         method: c.req.raw.method,
         headers: Object.fromEntries(headers.entries()),
         hasBody: !!body || (c.req.raw.method !== 'GET' && !!c.req.raw.body),
@@ -513,7 +515,7 @@ const forwardRequest = async (c: Context, id?: string, body?: ArrayBuffer, metad
     if (c.req.raw.method === 'GET' && response.status < 400) {
         // Determine TTL based on content type and status
         let ttl = RATE_LIMIT_CONFIG.DEFAULT_CACHE_TTL;
-        
+
         // Cache API responses for longer if they're likely to be stable
         const contentType = response.headers.get('content-type') || '';
         if (contentType.includes('application/json')) {
@@ -523,7 +525,7 @@ const forwardRequest = async (c: Context, id?: string, body?: ArrayBuffer, metad
                 ttl = RATE_LIMIT_CONFIG.API_CACHE_TTL;
             }
         }
-        
+
         // Don't block the response on caching
         cacheResponse(cacheKey, response, ttl).catch(error => {
             console.warn(`[${new Date().toISOString()}] Failed to cache response:`, error);
@@ -621,7 +623,7 @@ const inspectRequest = async (c: Context): Promise<{ toolCall?: ToolCall, body?:
                                         isPaid = true;
                                         pricing = activePricings;
 
-                                        // TODO: pick a pricing entry based on the user's wallet address
+                                        console.log(`[${new Date().toISOString()}] Active pricings: ${JSON.stringify(activePricings, null, 2)}`);
                                     }
                                 }
                             }
@@ -629,13 +631,27 @@ const inspectRequest = async (c: Context): Promise<{ toolCall?: ToolCall, body?:
 
                         console.log(`[${new Date().toISOString()}] ---Tool ID: ${toolId}`)
 
+                        // TODO: pick a pricing entry based on the user's wallet address
+                        let pickedPricing: PricingEntry | undefined = undefined;
+
+                        // if multiple pricing entries, use mainnet if available
+                        if (pricing && pricing.length > 0) {
+                            const mainnetPricing = pricing.find(p => p.network === 'base');
+                            if (mainnetPricing) {
+                                console.log(`[${new Date().toISOString()}] Using mainnet pricing: ${JSON.stringify(mainnetPricing, null, 2)}`);
+                                pickedPricing = mainnetPricing
+                            }
+                        }
+
+                        console.log(`[${new Date().toISOString()}] Picked pricing: ${JSON.stringify(pickedPricing, null, 2)}`);
+
                         // Store tool call info to return
                         toolCall = {
                             name: toolName,
                             args: toolArgs || {},
                             isPaid,
                             payTo: payTo || undefined,
-                            pricing: pricing ? pricing : undefined,
+                            pricing: pickedPricing ? [pickedPricing] : undefined,
                             ...(id && { id: id }),
                             ...(toolId && { toolId }),
                             ...(serverId && { serverId }),
@@ -665,7 +681,7 @@ async function resolveUserFromRequest(c: Context): Promise<UserWithWallet | null
     // Parse URL search params for API key checking
     const url = new URL(c.req.url);
     const searchParams = url.searchParams;
-    
+
     // Parse body params if available (for POST requests)
     let bodyParams: Record<string, unknown> | undefined = undefined;
     try {
@@ -688,7 +704,7 @@ async function resolveUserFromRequest(c: Context): Promise<UserWithWallet | null
         searchParams,
         bodyParams
     });
-    
+
     if (apiKey) {
         console.log(`[${new Date().toISOString()}] API key found, validating...`);
         try {
@@ -888,14 +904,15 @@ async function recordAnalytics(params: {
     upstream: Response;
     c: Context;
     responseData?: Record<string, unknown>;
-    paymentAmount?: string;
     authMethod?: string; // Authentication method used
 }) {
-    const { toolCall, user, startTime, upstream, c, responseData, paymentAmount, authMethod } = params;
+    const { toolCall, user, startTime, upstream, c, responseData, authMethod } = params;
 
     if (!toolCall.toolId || !toolCall.serverId) {
         return;
     }
+
+    const pickedPricing = toolCall.pricing?.[0];
 
     await withTransaction(async (tx) => {
         // Record tool usage
@@ -917,10 +934,11 @@ async function recordAnalytics(params: {
 
         // Calculate converted revenue amount if payment was made
         let convertedRevenue: number | undefined = undefined;
+        const paymentAmount = pickedPricing?.maxAmountRequiredRaw || "0";
+        console.log(`[${new Date().toISOString()}] Payment amount: ${paymentAmount}`);
         if (paymentAmount && toolCall.isPaid) {
             // Use active pricing from tool call for accurate conversion
-            const activePricing = toolCall.pricing;
-            if (activePricing && activePricing.length > 0) {
+            if (pickedPricing) {
                 try {
                     // Try to convert from base units to human-readable amount for analytics
                     // Check if paymentAmount looks like base units (all digits) or human-readable (contains decimal)
@@ -928,13 +946,13 @@ async function recordAnalytics(params: {
 
                     if (isBaseUnits) {
                         // Convert from base units to human-readable amount
-                        const humanReadableAmount = fromBaseUnits(paymentAmount, activePricing[0].tokenDecimals);
+                        const humanReadableAmount = fromBaseUnits(paymentAmount, pickedPricing.tokenDecimals);
                         convertedRevenue = parseFloat(humanReadableAmount);
-                        console.log(`[${new Date().toISOString()}] Analytics: Recording revenue of ${humanReadableAmount} ${activePricing[0].assetAddress} (base units: ${paymentAmount})`);
+                        console.log(`[${new Date().toISOString()}] Analytics: Recording revenue of ${humanReadableAmount} ${pickedPricing.assetAddress} (base units: ${paymentAmount})`);
                     } else {
                         // Already in human-readable format
                         convertedRevenue = parseFloat(paymentAmount);
-                        console.log(`[${new Date().toISOString()}] Analytics: Recording revenue of ${paymentAmount} ${activePricing[0].assetAddress} (already human-readable)`);
+                        console.log(`[${new Date().toISOString()}] Analytics: Recording revenue of ${paymentAmount} ${pickedPricing.assetAddress} (already human-readable)`);
                     }
                 } catch (error) {
                     // Fallback if conversion fails - treat as human-readable
@@ -961,7 +979,7 @@ async function processPayment(params: {
     c: Context;
     user: UserWithWallet | null;
     startTime: number;
-}): Promise<{ success: boolean; error?: string; user?: UserWithWallet } | Response> {
+}): Promise<{ success: boolean; error?: string; user?: UserWithWallet, pickedPricing?: PricingEntry } | Response> {
     const { toolCall, c, user, startTime } = params;
 
     if (!toolCall.isPaid || !toolCall.toolId || !toolCall.pricing) {
@@ -987,7 +1005,7 @@ async function processPayment(params: {
     // OR if specific managed wallet headers are present
     // OR if API key authentication is present (indicates programmatic access)
     const managedWalletHeaders = c.req.header('x-wallet-provider') === 'coinbase-cdp' && c.req.header('x-wallet-type') === 'managed';
-    
+
     // Check for API key in headers, query params, or body params
     const url = new URL(c.req.url);
     const searchParams = url.searchParams;
@@ -1004,13 +1022,13 @@ async function processPayment(params: {
     } catch {
         // Body parsing failed, continue without body params
     }
-    
+
     const hasApiKey = !!extractApiKey({
         headers: c.req.raw.headers,
         searchParams,
         bodyParams
     });
-    
+
     const shouldAutoSign = toolCall.pricing && (
         (!paymentHeader) && (
             managedWalletHeaders || hasApiKey
@@ -1021,12 +1039,15 @@ async function processPayment(params: {
     console.log(`[${new Date().toISOString()}] Has API key: ${hasApiKey}`);
     console.log(`[${new Date().toISOString()}] Should auto-sign: ${shouldAutoSign}`);
 
+    const pickedPricing = toolCall.pricing?.[0];
+
+
     if (shouldAutoSign) {
         console.log(`[${new Date().toISOString()}] ${!paymentHeader ? 'No X-PAYMENT header found' : 'Managed wallet headers detected'}, attempting auto-signing`);
 
         const humanReadableAmount = fromBaseUnits(
-            toolCall.pricing?.[0]?.maxAmountRequiredRaw || "0",
-            toolCall.pricing?.[0]?.tokenDecimals || 6
+            pickedPricing?.maxAmountRequiredRaw || "0",
+            pickedPricing?.tokenDecimals || 6
         );
 
         try {
@@ -1035,8 +1056,8 @@ async function processPayment(params: {
                 isPaid: toolCall.isPaid,
                 payment: {
                     maxAmountRequired: humanReadableAmount,
-                    network: toolCall.pricing?.[0]?.network,
-                    asset: toolCall.pricing?.[0]?.assetAddress,
+                    network: pickedPricing?.network!,
+                    asset: pickedPricing?.assetAddress!,
                     payTo: toolCall.payTo,
                     resource: `mcpay://${toolCall.name}`,
                     description: `Execution of ${toolCall.name}`
@@ -1081,14 +1102,14 @@ async function processPayment(params: {
     }
 
     const humanReadableAmount = fromBaseUnits(
-        toolCall.pricing?.[0]?.maxAmountRequiredRaw || "0",
-        toolCall.pricing?.[0]?.tokenDecimals || 6
+        pickedPricing?.maxAmountRequiredRaw || "0",
+        pickedPricing?.tokenDecimals || 6
     );
 
     const paymentRequirements = [
         createExactPaymentRequirements(
             humanReadableAmount,
-            toolCall.pricing?.[0]?.network as SupportedNetwork,
+            pickedPricing?.network as SupportedNetwork,
             `mcpay://${toolCall.name}`,
             `Execution of ${toolCall.name}`,
             payTo as `0x${string}`
@@ -1159,7 +1180,8 @@ async function processPayment(params: {
         return {
             success: false,
             error: "Payment verification failed",
-            user: extractedUser || undefined
+            user: extractedUser || undefined,
+            pickedPricing: pickedPricing || undefined
         };
     }
 
@@ -1281,6 +1303,7 @@ verbs.forEach(verb => {
         const startTime = Date.now();
         const { toolCall, body } = await inspectRequest(c);
         console.log(`[${new Date().toISOString()}] Request payload logged, toolCall: ${toolCall ? 'present' : 'not present'}`);
+        console.log(`[${new Date().toISOString()}] Tool call pricing: ${JSON.stringify(toolCall?.pricing, null, 2)}`);
 
         // Enhanced user resolution - prioritizes API key authentication
         let user: UserWithWallet | null = await resolveUserFromRequest(c);
@@ -1299,7 +1322,7 @@ verbs.forEach(verb => {
             }
 
             // At this point, paymentResult is guaranteed to be the object type, not Response
-            const paymentResultObj = paymentResult as { success: boolean; error?: string; user?: UserWithWallet };
+            const paymentResultObj = paymentResult as { success: boolean; error?: string; user?: UserWithWallet, pickedPricing?: PricingEntry };
 
             if (!paymentResultObj.success) {
                 c.status(402);
@@ -1366,12 +1389,8 @@ verbs.forEach(verb => {
                 upstream,
                 c,
                 responseData,
-                // Pass base units amount from pricing metadata if available, otherwise use the amount as-is
-                paymentAmount: toolCall.isPaid ?
-                    (toolCall.pricing?.[0]?.maxAmountRequiredRaw) :
-                    undefined,
                 // Pass authentication method
-                authMethod: authMethod
+                authMethod: authMethod,
             });
         }
 

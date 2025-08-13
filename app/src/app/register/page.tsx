@@ -161,6 +161,7 @@ function RegisterPageContent() {
       const defaultPaymentTokens: Partial<Record<Network, string>> = {
         'base-sepolia': '0x036CbD53842c5426634e7929541eC2318f3dCF7e', // USDC on Base Sepolia
         'sei-testnet': '0x4fCF1784B31630811181f670Aea7A7bEF803eaED', // USDC on Sei Testnet
+        'base': '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
         // 'polygon': '0x3c499c542cef5e3811e1192ce70d8cc03d5c3359', // USDC on Polygon
       }
 
@@ -726,7 +727,7 @@ function RegisterPageContent() {
                 {/* Network Options */}
                 {showNetworkSelection && (
                   <div className="mt-4 space-y-2">
-                    {(['base-sepolia', 'sei-testnet'] as Network[]).map((networkKey) => {
+                    {(['base-sepolia', 'sei-testnet', 'base'] as Network[]).map((networkKey) => {
                       const networkConfig = getNetworkConfig(networkKey as UnifiedNetwork)
                       if (!networkConfig) return null
 
