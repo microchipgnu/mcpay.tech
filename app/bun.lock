@@ -74,6 +74,7 @@
         "sonner": "^2.0.6",
         "tailwind-merge": "^3.3.1",
         "vaul": "^1.1.2",
+        "vercel-url": "^0.2.8",
         "viem": "^2.32.0",
         "wagmi": "^2.15.7",
         "x402": "^0.4.1",
@@ -2308,6 +2309,8 @@
     "vary": ["vary@1.1.2", "", {}, "sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg=="],
 
     "vaul": ["vaul@1.1.2", "", { "dependencies": { "@radix-ui/react-dialog": "^1.1.1" }, "peerDependencies": { "react": "^16.8 || ^17.0 || ^18.0 || ^19.0.0 || ^19.0.0-rc", "react-dom": "^16.8 || ^17.0 || ^18.0 || ^19.0.0 || ^19.0.0-rc" } }, "sha512-ZFkClGpWyI2WUQjdLJ/BaGuV6AVQiJ3uELGk3OYtP+B6yCO7Cmn9vPFXVJkRaGkOJu3m8bQMgtyzNHixULceQA=="],
+
+    "vercel-url": ["vercel-url@0.2.8", "", {}, "sha512-0sa1u3QzWI/xmbtF2BC2DyXPwnAHOsz+gtFBzCut9ywr9LplWhspjp4vT5luFjQaakXp9M+966CjDPzA53cMug=="],
 
     "vfile": ["vfile@6.0.3", "", { "dependencies": { "@types/unist": "^3.0.0", "vfile-message": "^4.0.0" } }, "sha512-KzIbH/9tXat2u30jf+smMwFCsno4wHVdNmzFyL+T/L3UGqqk6JKfVqOFOZEpZSHADH1k40ab6NUIXZq422ov3Q=="],
 

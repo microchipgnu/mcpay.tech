@@ -16,6 +16,8 @@ import { createHash } from 'crypto';
 import { getKVConfig } from '@/lib/gateway/env';
 import { z } from 'zod';
 import type { MCPClient } from '@/types/mcp';
+import { DEPLOYMENT_URL } from "vercel-url";
+
 
 // Type definitions for MCP data
 interface McpPrompt {
@@ -53,14 +55,27 @@ function getCacheKey(mcpUrl: string): string {
 }
 
 // Create MCP client efficiently for serverless environment
-// TODO: use the clients auth session to connect to the MCP server
-// This will charge the user directly for the MCP server calls
-async function createOptimizedMcpClient(mcpUrl: string): Promise<{ client: MCPClient; tools: ToolSet }> {
+// Includes Better Auth session cookies by forwarding the incoming request cookies
+async function createOptimizedMcpClient(
+  mcpUrl: string,
+  requestHeaders?: Headers
+): Promise<{ client: MCPClient; tools: ToolSet }> {
   console.log('Chat API: Creating optimized MCP client for serverless');
 
   try {
+    const cookieHeader = requestHeaders?.get('cookie');
+    const outboundHeaders: Record<string, string> = {};
+    if (cookieHeader) {
+      outboundHeaders['cookie'] = cookieHeader;
+    }
+
     // Use Streamable HTTP transport which is more efficient for serverless
-    const transport = new StreamableHTTPClientTransport(new URL(mcpUrl));
+    const transport = new StreamableHTTPClientTransport(new URL(mcpUrl), {
+      requestInit: {
+        headers: outboundHeaders,
+        credentials: 'include',
+      },
+    });
     const client = await createMCPClient({ transport });
     const tools = await client.tools();
 
@@ -71,7 +86,7 @@ async function createOptimizedMcpClient(mcpUrl: string): Promise<{ client: MCPCl
   }
 }
 
-async function getCachedMcpData(mcpUrl: string): Promise<CachedMcpData> {
+async function getCachedMcpData(mcpUrl: string, requestHeaders?: Headers): Promise<CachedMcpData> {
   const promptsCacheKey = `${getCacheKey(mcpUrl)}_prompts`;
 
   try {
@@ -82,7 +97,7 @@ async function getCachedMcpData(mcpUrl: string): Promise<CachedMcpData> {
       console.log('Chat API: Using cached prompts, creating fresh MCP client');
 
       // Always create fresh client for tools (tools are hard to serialize reliably)
-      const { tools } = await createOptimizedMcpClient(mcpUrl);
+      const { tools } = await createOptimizedMcpClient(mcpUrl, requestHeaders);
 
       return {
         prompts: cachedPrompts as McpPromptsResponse,
@@ -95,7 +110,7 @@ async function getCachedMcpData(mcpUrl: string): Promise<CachedMcpData> {
     // Fetch fresh data in parallel
     const [prompts, mcpClientResult] = await Promise.all([
       getMcpPrompts(mcpUrl),
-      createOptimizedMcpClient(mcpUrl)
+      createOptimizedMcpClient(mcpUrl, requestHeaders)
     ]);
 
     const { tools } = mcpClientResult;
@@ -112,7 +127,7 @@ async function getCachedMcpData(mcpUrl: string): Promise<CachedMcpData> {
     // Fallback to fresh data if cache fails
     const [prompts, mcpClientResult] = await Promise.all([
       getMcpPrompts(mcpUrl),
-      createOptimizedMcpClient(mcpUrl)
+      createOptimizedMcpClient(mcpUrl, requestHeaders)
     ]);
 
     const { tools } = mcpClientResult;
@@ -130,9 +145,9 @@ export async function POST(req: Request) {
     console.log('Chat API: Session ID:', sessionId);
 
     // TODO: remove the hardcoded API key
-    const mcpUrl = "https://mcpay-tech-dev.vercel.app/mcp/73b54493-048d-4433-8687-fdf2dc1ebf4d?apiKey=mcpay_btBwYdWL7KPOoQ6AKNnjNQjMSSvU8jYInOeEXgxWwj0";
+    const mcpUrl = `${DEPLOYMENT_URL}/mcp/73b54493-048d-4433-8687-fdf2dc1ebf4d`;
 
-    const { prompts, tools } = await getCachedMcpData(mcpUrl);
+    const { prompts, tools } = await getCachedMcpData(mcpUrl, req.headers);
 
     // find system prompt  
     const systemPrompt = prompts.prompts.find((prompt: McpPrompt) => prompt.name === "system");
@@ -229,11 +244,4 @@ export async function POST(req: Request) {
     console.error('Chat API error:', error);
     return NextResponse.json({ error: 'Failed to process chat request' }, { status: 500 });
   }
-}
-
-export async function GET(req: Request) {
-  const mcpUrl = "https://mcpay-tech-dev.vercel.app/mcp/73b54493-048d-4433-8687-fdf2dc1ebf4d?apiKey=mcpay_btBwYdWL7KPOoQ6AKNnjNQjMSSvU8jYInOeEXgxWwj0";
-
-  const { prompts } = await getCachedMcpData(mcpUrl);
-  return NextResponse.json({ prompts });
 }
