@@ -1,16 +1,12 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { toast } from "sonner"
 import { useTheme } from "@/components/providers/theme-context"
 import { urlUtils } from "@/lib/client/utils"
 import {
   ArrowRight,
-  Moon,
   Rocket,
-  Sparkles,
-  Sun,
   TrendingUp,
 } from "lucide-react"
 import Link from "next/link"
@@ -246,46 +242,6 @@ export default function MCPBrowser() {
               )}
             </div>
           </div>
-
-          {/* Enhanced Footer */}
-          <div className={`text-center py-12 border-t ${isDark ? "border-gray-700" : "border-gray-200"}`}>
-            <div className="flex flex-col items-center gap-6">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-blue-500" />
-                <p className={`text-lg ${isDark ? "text-gray-300" : "text-gray-600"}`}>
-                  Powered by the <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Model Context Protocol</a> and <a href="https://x402.org" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">x402</a>
-                </p>
-              </div>
-
-              <div className="flex items-center gap-4 text-sm">
-                <a
-                  href="https://github.com/microchipgnu/mcpay.fun"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`hover:text-[#0052FF] transition-colors duration-200 ${isDark ? "text-gray-400" : "text-gray-500"} cursor-pointer`}
-                >
-                  GitHub
-                </a>
-                <span className={isDark ? "text-gray-600" : "text-gray-400"}>·</span>
-                <a
-                  href="https://x.com/microchipgnu"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`hover:text-[#0052FF] transition-colors duration-200 ${isDark ? "text-gray-400" : "text-gray-500"} cursor-pointer`}
-                >
-                  X
-                </a>
-                <span className={isDark ? "text-gray-600" : "text-gray-400"}>·</span>
-                <button
-                  onClick={toggleTheme}
-                  className={`flex items-center gap-1.5 hover:text-[#0052FF] transition-colors duration-200 ${isDark ? "text-gray-400" : "text-gray-500"} cursor-pointer`}
-                >
-                  {isDark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
-                  {isDark ? "Light" : "Dark"}
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     )
@@ -335,7 +291,7 @@ export default function MCPBrowser() {
           </div>
         )}
 
-        <section className="mb-10">
+        <section className="mb-40">
           <div className="max-w-6xl px-4 md:px-6 mx-auto">
             <h2 className="text-3xl font-semibold font-host mb-10">How it works</h2>
           </div>

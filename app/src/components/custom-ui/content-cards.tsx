@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PlugZap, DollarSign } from "lucide-react";
-
+import Link from "next/link";
 export default function ContentCards() {
   return (
     <section className="mx-auto w-full max-w-6xl px-4 md:px-6 space-y-8 md:space-y-10">
@@ -76,21 +76,23 @@ export default function ContentCards() {
                   { n: 1, title: "Sign-Up to MCPay", detail: "using GitHub." },
                   {
                     n: 2,
-                    title: "Fund your account",
-                    detail: "with any amount, using Credit Card, Apple Pay or Crypto.",
+                    title: "Paste the server URL",
+                    detail: "in the register page and set prices for each tool call.",
                   },
                   {
                     n: 3,
-                    title: "Connect any server",
-                    detail: "and pay per tool you consume.",
+                    title: "When used",
+                    detail: "each tool call will require settlement before being executed.",
                   },
                 ]}
               />
 
               <div className="mt-6">
-                <Button variant="ghostCustomSecondary" className="cursor-pointer w-full">
-                  MONETIZE SERVER
-                </Button>
+                <Link href="/register" className="w-full">
+                  <Button variant="ghostCustomSecondary" className="cursor-pointer w-full">
+                    MONETIZE SERVER
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
