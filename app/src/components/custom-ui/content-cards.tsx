@@ -39,7 +39,7 @@ export default function ContentCards() {
               />
 
               <div className="mt-6">
-                <Button variant="secondary" className="cursor-pointer w-full">
+                <Button variant="ghostCustomSecondary" className="cursor-pointer w-full">
                   View All Servers
                 </Button>
               </div>
@@ -88,8 +88,8 @@ export default function ContentCards() {
               />
 
               <div className="mt-6">
-                <Button variant="secondary" className="cursor-pointer w-full">
-                  Register
+                <Button variant="ghostCustomSecondary" className="cursor-pointer w-full">
+                  MONETIZE SERVER
                 </Button>
               </div>
             </div>

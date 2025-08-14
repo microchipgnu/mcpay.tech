@@ -44,7 +44,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between py-2 sm:grid sm:grid-cols-3">
           {/* Left: Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex-shrink-0 px-2 hover:bg-muted rounded-md">
+            <Link href="/">
               {/* Mobile: symbol */}
               <div className="block sm:hidden">
                 <Image src={symbolSrc} alt="MCPay Symbol" width={34} height={34} />
@@ -84,10 +84,10 @@ export default function Navbar() {
           {/* Right: Connect/Account + Mobile Menu */}
           <div className="flex items-center justify-end gap-1">
             <Button
-              variant="default"
+              variant="ghostCustom"
               onClick={() => openModal("funds")}
               disabled={sessionLoading}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors duration-200"
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors duration-200 cursor-pointer"
               aria-label={session?.user ? "Open account" : "Connect"}
             >
               {session?.user ? (

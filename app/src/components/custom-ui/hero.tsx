@@ -169,7 +169,7 @@ export default function Hero({
               className="mt-6 flex justify-center sm:justify-start"
               variants={fadeUp}
             >
-              <Button asChild size="lg" className="min-w-[10rem]">
+              <Button asChild size="lg" variant="ghostCustom" className="min-w-[10rem]">
                 <a href={current.href ?? "#"}>{current.cta}</a>
               </Button>
             </motion.div>
