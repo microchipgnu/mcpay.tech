@@ -1051,18 +1051,36 @@ async function processPayment(params: {
             pickedPricing?.tokenDecimals || 6
         );
 
+        const payment = {
+            maxAmountRequired: humanReadableAmount,
+            network: pickedPricing?.network,
+            asset: pickedPricing?.assetAddress,
+            payTo: toolCall.payTo,
+            resource: `mcpay://${toolCall.name}`,
+            description: `Execution of ${toolCall.name}`
+        }
+
+        if(payment.asset === '') {
+            return {
+                success: false,
+                error: "No asset address available for paid tool",
+                user: user || undefined
+            };
+        }
+
+        if(payment.network === '') {
+            return {
+                success: false,
+                error: "No network available for paid tool",
+                user: user || undefined
+            };
+        }
+
         try {
             // Create a properly typed tool call for auto-signing
             const autoSignToolCall = {
                 isPaid: toolCall.isPaid,
-                payment: {
-                    maxAmountRequired: humanReadableAmount,
-                    network: pickedPricing?.network!,
-                    asset: pickedPricing?.assetAddress!,
-                    payTo: toolCall.payTo,
-                    resource: `mcpay://${toolCall.name}`,
-                    description: `Execution of ${toolCall.name}`
-                }
+                payment
             };
 
             const autoSignResult = await attemptAutoSign(c, autoSignToolCall, extractedUser ? {
