@@ -641,6 +641,7 @@ const inspectRequest = async (c: Context): Promise<{ toolCall?: ToolCall, body?:
                                 console.log(`[${new Date().toISOString()}] Using mainnet pricing: ${JSON.stringify(mainnetPricing, null, 2)}`);
                                 pickedPricing = mainnetPricing
                             }
+                            else pickedPricing = pricing[0];
                         }
 
                         console.log(`[${new Date().toISOString()}] Picked pricing: ${JSON.stringify(pickedPricing, null, 2)}`);
