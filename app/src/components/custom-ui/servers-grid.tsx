@@ -14,14 +14,18 @@ import { urlUtils } from "@/lib/client/utils"
 export default function ServersGrid({
   servers,
   loading = false,
+  className = "", // NEW
 }: {
   servers: MCPServer[]
   loading?: boolean
+  className?: string // NEW
 }) {
   const skeletonCount = 6
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-16 max-w-6xl px-4 md:px-6 mx-auto">
+    <div
+      className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl px-4 md:px-6 mx-auto ${className}`}
+    >
       <TooltipProvider>
         {loading
           ? Array.from({ length: skeletonCount }).map((_, idx) => (
