@@ -218,13 +218,8 @@ export default function MCPBrowser() {
           <ServersGrid servers={mcpServers} loading={loading} />
           <div className="text-center mt-10">
             <Link href="/servers">
-              <Button
-                size="lg"
-                variant="outline"
-                className={`${isDark ? "bg-gray-800/50 hover:bg-gray-700/50 border-gray-600" : "bg-white/50 hover:bg-white/80 border-gray-300"} backdrop-blur transition-all duration-300 hover:shadow-lg`}
-              >
-                View All Servers
-                <ArrowRight className="h-4 w-4 ml-2" />
+              <Button variant="ghostCustom">
+                Browse Servers
               </Button>
             </Link>
           </div>
