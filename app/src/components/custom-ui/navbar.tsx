@@ -70,7 +70,7 @@ export default function Navbar() {
               variant="link"
               className={`${linkClasses} ${pathname === "/browse" ? activeLinkClasses : ""}`}
             >
-              <Link href="/browse">BROWSE</Link>
+              <Link href="/servers">BROWSE</Link>
             </Button>
             <Button
               asChild
@@ -158,7 +158,7 @@ export default function Navbar() {
                   </SheetClose>
                   <SheetClose asChild>
                     <Link
-                      href="/browse"
+                      href="/servers"
                       className="block font-mono tracking-wide text-lg text-muted-foreground hover:text-foreground"
                     >
                       BROWSE
