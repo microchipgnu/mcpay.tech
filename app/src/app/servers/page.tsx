@@ -90,9 +90,12 @@ export default function ServersPage() {
         const controller = new AbortController()
         const fetchServers = async () => {
             try {
-                setLoading(true); setError(null)
+                setLoading(true)
+                setError(null)
                 const offset = (page - 1) * PAGE_SIZE
-                const res = await fetch(urlUtils.getApiUrl(`/servers?limit=${PAGE_SIZE}&offset=${offset}`), { signal: controller.signal })
+                const res = await fetch(urlUtils.getApiUrl(`/servers?limit=${PAGE_SIZE}&offset=${offset}`), {
+                    signal: controller.signal,
+                })
                 if (!res.ok) throw new Error(`Failed to fetch servers: ${res.status}`)
                 const data: ApiArrayResponse | ApiObjectResponse = await res.json()
 
@@ -105,15 +108,21 @@ export default function ServersPage() {
                     setTotalCount(data.total)
                     setHasNext(offset + data.items.length < data.total)
                 }
-            } catch (e: any) {
-                if (e?.name !== "AbortError") setError(e instanceof Error ? e.message : "Failed to fetch servers")
+            } catch (e: unknown) {
+                if (e instanceof Error && e.name !== "AbortError") {
+                    setError(e.message)
+                } else if (!(e instanceof Error)) {
+                    setError("Failed to fetch servers")
+                }
             } finally {
                 setLoading(false)
             }
         }
+
         fetchServers()
         return () => controller.abort()
     }, [page])
+
 
     // ---- measure overflow & toggle footer mode ----
     useEffect(() => {
