@@ -84,7 +84,7 @@ function PurePreviewMessage({
             </div>
 
             {isLoading && message.role === 'assistant' && (
-              <div className="text-sm text-muted-foreground">Typing…</div>
+              <div className="text-sm text-muted-foreground">Working on it…</div>
             )}
           </div>
         </div>

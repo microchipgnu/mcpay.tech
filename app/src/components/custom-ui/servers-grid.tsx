@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Check, Copy, Globe, Hammer, Activity } from "lucide-react"
+import { Check, Copy, Hammer, Activity } from "lucide-react"
 import { MCPServer } from "@/app/page"
 import { urlUtils } from "@/lib/client/utils"
 
