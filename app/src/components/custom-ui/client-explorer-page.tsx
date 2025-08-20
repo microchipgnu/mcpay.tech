@@ -200,7 +200,7 @@ export default function ClientExplorerPage() {
         <main>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 text-center">
             <h1 className={`text-5xl font-extrabold mb-6 ${isDark ? "text-white" : "text-gray-900"}`}>Something went wrong</h1>
-            <p className={`text-lg max-w-3xl mx-auto ${isDark ? "text-gray-300" : "text-gray-600"}`}>We couldn't load the explorer right now.</p>
+            <p className={`text-lg max-w-3xl mx-auto ${isDark ? "text-gray-300" : "text-gray-600"}`}>We couldn&apos;t load the explorer right now.</p>
           </div>
         </main>
         <div className="mt-12">
